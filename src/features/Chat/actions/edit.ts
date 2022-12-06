@@ -6,6 +6,7 @@ import { HistoryRow } from '../../../utils/historyRow';
 import Error from '../error';
 import { FEATURES } from '../../../utils/features';
 import Operation from '../operation';
+import { checkChatExistence } from '../util';
 
 const edit = async (
     connection: Connection,
@@ -102,28 +103,6 @@ const checkValidation = (
     }
 
     return ok(undefined);
-};
-
-const checkChatExistence = async (
-    { userID, client }: Connection,
-    id: ChatModel['id']
-): Promise<Result<string[], Error>> => {
-    const checkChatExistenceResult = await Chat.select(
-        ['userIDs'] as const,
-        context =>
-            context.colsAnd({
-                id: ['=', id],
-                ownerID: ['=', userID],
-                isGroup: ['= false']
-            })
-    ).exec(client, ['get', 'one']);
-    if (!checkChatExistenceResult.ok) {
-        return err(
-            checkChatExistenceResult.error === false ? [301] : [401, checkChatExistenceResult.error]
-        );
-    }
-
-    return ok(checkChatExistenceResult.value.userIDs as string[]);
 };
 
 const editChat = async (
