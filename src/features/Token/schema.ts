@@ -55,4 +55,5 @@ type TokenModel<R extends readonly (keyof typeof TokenTable['columns'])[] = [
     O extends readonly (keyof typeof TokenTable['columns'])[] = []> = Model<typeof TokenTable['columns'], R, O>;
 const TokenModel = createModelUtils(Token.table.columns);
 
+export { TOKEN_SECRET_LENGTH };
 export { Token, TokenModel };
