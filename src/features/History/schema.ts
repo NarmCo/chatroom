@@ -16,12 +16,6 @@ const HistoryTable = {
             nullable: false,
             title: 'log_id'
         },
-        yearCompanyID: {
-            type: 'smallint',
-            default: false,
-            nullable: true,
-            title: 'year_company_id'
-        },
         userID: {
             type: 'smallint',
             default: false,
@@ -69,7 +63,6 @@ const History = createEntity(HistoryTable);
 type HistoryModel<R extends readonly (keyof typeof HistoryTable['columns'])[] = [
     'id',
     'logID',
-    'yearCompanyID',
     'userID',
     'feature',
     'table',
