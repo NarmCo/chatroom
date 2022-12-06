@@ -1,6 +1,5 @@
 import { createEntity, createModelUtils, Model } from '@mrnafisia/type-query';
 
-
 const ChatTable = {
     schema: 'general',
     title: 'chat',
@@ -21,13 +20,25 @@ const ChatTable = {
             type: 'jsonb',
             default: false,
             nullable: false,
-            title: 'user_ids'
+            title: 'users'
         },
         threadIDs: {
             type: 'jsonb',
             default: false,
             nullable: false,
-            title: 'thread_ids'
+            title: 'threads'
+        },
+        ownerID: {
+            type: 'smallint',
+            default: false,
+            nullable: false,
+            title: 'owner'
+        },
+        isGroup: {
+            type: 'boolean',
+            default: false,
+            nullable: false,
+            title: 'is_group'
         }
     }
 } as const;
@@ -35,7 +46,9 @@ const Chat = createEntity(ChatTable);
 type ChatModel<R extends readonly (keyof typeof ChatTable['columns'])[] = [
     'id',
     'title',
-    'userIDs'
+    'userIDs',
+    'ownerID',
+    'isGroup'
 ],
     O extends readonly (keyof typeof ChatTable['columns'])[] = [
         'threadIDs'
