@@ -43,6 +43,12 @@ const UserTable = {
             default: false,
             nullable: false,
             title: 'is_admin'
+        },
+        fileID: {
+            type: 'bigint',
+            default: false,
+            nullable: false,
+            title: 'file'
         }
     }
 } as const;
@@ -53,7 +59,8 @@ type UserModel<R extends readonly (keyof typeof UserTable['columns'])[] = [
     'password',
     'name',
     'phone',
-    'isAdmin'
+    'isAdmin',
+    'fileID'
 ],
     O extends readonly (keyof typeof UserTable['columns'])[] = []> = Model<typeof UserTable['columns'], R, O>;
 const UserModel = createModelUtils(User.table.columns);
