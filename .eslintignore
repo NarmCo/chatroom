@@ -1,0 +1,14 @@
+# build
+/build-dev
+/build-prd
+/dist
+
+# script
+/scripts
+
+# configs
+/dev.webpack.config.js
+/prd.webpack.config.js
+/jest.config.js
+/.eslintrc.js
+
