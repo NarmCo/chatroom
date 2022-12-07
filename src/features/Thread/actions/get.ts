@@ -1,21 +1,20 @@
-import { Connection } from '../../../utils/connection';
+import Error from '../../Chat/error';
 import { err, ok, Result } from 'never-catch';
-import { Chat, ChatModel } from '../schema';
+import { ChatModel } from '../../Chat/schema';
+import { Thread, ThreadModel } from '../schema';
 import { MessageModel } from '../../Message/schema';
-import Error from '../error';
 import { Context, U } from '@mrnafisia/type-query';
-import { QueryResult } from 'pg';
+import { Connection } from '../../../utils/connection';
 
 const get = async (
     connection: Connection,
+    chatID: ChatModel['id'],
     start: bigint,
     step: number
 ): Promise<Result<{
-    id: ChatModel['id'],
-    title: ChatModel['title'],
-    isGroup: ChatModel['isGroup'],
+    id: ThreadModel['id'],
+    title: ThreadModel['title'],
     firstUnseenMessageID: MessageModel['id'] | null,
-    isFirstUnseenFromThread: boolean,
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
     lastMessageCreatedAt: MessageModel['createdAt'],
@@ -23,19 +22,20 @@ const get = async (
 }[], Error>> => {
 
     // find user chats using connection.userID
-    const getChatsResult = await getChats(
+    const getThreadsResult = await getThreads(
         connection,
+        chatID,
         start,
         step
     );
-    if (!getChatsResult.ok) {
-        return getChatsResult;
+    if (!getThreadsResult.ok) {
+        return getThreadsResult;
     }
 
     // find last message details
     const getLastMessagesResult = await getLastMessages(
         connection,
-        getChatsResult.value.result
+        getThreadsResult.value.result
     );
     if (!getLastMessagesResult.ok) {
         return getLastMessagesResult;
@@ -48,18 +48,15 @@ const get = async (
     );
 };
 
-const getChats = async (
-    { client, userID }: Connection,
+const getThreads = async (
+    { client }: Omit<Connection, 'userID'>,
+    chatID: ChatModel['id'],
     start: bigint,
     step: number
-): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup']>[]; length: number }, Error>> => {
-    const where = (context: Context<typeof Chat.table['columns']>) =>
-        context.colsOr({
-            ownerID: ['=', userID],
-            userIDs: ['?', userID.toString()]
-        });
-    const getChatsResult = await Chat.select(
-        ['id', 'title', 'isGroup'] as const,
+): Promise<Result<{ result: ThreadModel<['id', 'title']>[]; length: number }, Error>> => {
+    const where = (context: Context<typeof Thread.table['columns']>) => context.colCmp('chatID', '=', chatID);
+    const getThreadsResult = await Thread.select(
+        ['id', 'title'] as const,
         where,
         {
             start,
@@ -72,11 +69,11 @@ const getChats = async (
             ]
         }
     ).exec(client, []);
-    if (!getChatsResult.ok) {
-        return err([401, getChatsResult.error]);
+    if (!getThreadsResult.ok) {
+        return err([401, getThreadsResult.error]);
     }
 
-    const getLengthResult = await Chat.select(
+    const getLengthResult = await Thread.select(
         context =>
             [
                 {
@@ -96,39 +93,37 @@ const getChats = async (
 
 
     return ok({
-        result: getChatsResult.value,
+        result: getThreadsResult.value,
         length: getLengthResult.value.len
     });
 };
 
 const getLastMessages = async (
     { client }: Omit<Connection, 'userID'>,
-    chats: ChatModel<['id', 'title', 'isGroup']>[]
+    threads: ThreadModel<['id', 'title']>[]
 ): Promise<Result<{
-    id: ChatModel['id'],
-    title: ChatModel['title'],
-    isGroup: ChatModel['isGroup'],
+    id: ThreadModel['id'],
+    title: ThreadModel['title'],
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
     lastMessageCreatedAt: MessageModel['createdAt'],
     lastMessageUserID: MessageModel['userID']
 }[], Error>> => {
     const result: {
-        id: ChatModel['id'],
-        title: ChatModel['title'],
-        isGroup: ChatModel['isGroup'],
+        id: ThreadModel['id'],
+        title: ThreadModel['title'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
         lastMessageUserID: MessageModel['userID']
     }[] = [];
     const getLastMessages = await client.query(
-        'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at' +
+        'SELECT m1.id, m1.thread, m1.content, m1.user, m1.created_at' +
         ' FROM message as m1' +
         ' inner join' +
-        ' (SELECT chat, max(created_at) as created_at FROM message ' +
-        ' WHERE chat in ' + '\'[' + chats.map(e => e.id).join(', ') + ']\'' +
-        ' group by chat) as m2' +
+        ' (SELECT thread, max(created_at) as created_at FROM message WHERE' +
+        ' thread in ' + '\'[' + threads.map(e => e.id).join(', ') + ']\'' +
+        'group by thread) as m2' +
         ' on m1.chat = m2.chat and m1.created_at = m2.created_at'
     )
         .then((res) => res)
@@ -138,17 +133,16 @@ const getLastMessages = async (
         return err([401, getLastMessages[1]]);
     }
 
-    for (const chat of chats) {
-        const row = getLastMessages.rows.find(e => e.chat === chat.id);
+    for (const thread of threads) {
+        const row = getLastMessages.rows.find(e => e.thread === thread.id);
         if (row === undefined) {
             return err([401, null]);
         }
 
         result.push(
             {
-                id: chat.id,
-                title: chat.title,
-                isGroup: chat.isGroup,
+                id: thread.id,
+                title: thread.title,
                 lastMessageID: row.id,
                 lastMessageContent: row.content,
                 lastMessageCreatedAt: row.created_at,
@@ -162,32 +156,27 @@ const getLastMessages = async (
 
 const getFirstUnseenMessage = async (
     { client, userID }: Connection,
-    chatsWithLastMessageDetail: {
-        id: ChatModel['id'],
-        title: ChatModel['title'],
-        isGroup: ChatModel['isGroup'],
+    threadsWithLastMessageDetail: {
+        id: ThreadModel['id'],
+        title: ThreadModel['title'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
         lastMessageUserID: MessageModel['userID']
     }[]
 ): Promise<Result<{
-    id: ChatModel['id'],
-    title: ChatModel['title'],
-    isGroup: ChatModel['isGroup'],
-    firstUnseenMessageID: MessageModel['id'] | null,
-    isFirstUnseenFromThread: boolean,
+    id: ThreadModel['id'],
+    title: ThreadModel['title'],
+    firstUnseenMessageID: MessageModel['id'] | null
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
     lastMessageCreatedAt: MessageModel['createdAt'],
     lastMessageUserID: MessageModel['userID']
 }[], Error>> => {
     const result: {
-        id: ChatModel['id'],
-        title: ChatModel['title'],
-        isGroup: ChatModel['isGroup'],
-        firstUnseenMessageID: MessageModel['id'] | null,
-        isFirstUnseenFromThread: boolean,
+        id: ThreadModel['id'],
+        title: ThreadModel['title'],
+        firstUnseenMessageID: MessageModel['id'] | null
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
@@ -195,11 +184,11 @@ const getFirstUnseenMessage = async (
     }[] = [];
 
     const getFirstUnseenMessageResult = await client.query(
-        'SELECT m1.id, m1.chat FROM message AS m1' +
+        'SELECT m1.id, m1.thread FROM message AS m1' +
         'INNER JOIN' +
-        '(SELECT chat, min(id) as id FROM message' +
-        'WHERE NOT seen_by ? ' + userID + ' AND thread = null ' +
-        ' AND chat in \'[' + chatsWithLastMessageDetail.map(e => e.id).join(', ') + ']\' ' +
+        '(SELECT thread, min(id) as id FROM message' +
+        'WHERE NOT seen_by ? ' + userID +
+        ' AND thread in \'[' + threadsWithLastMessageDetail.map(e => e.id).join(', ') + ']\' ' +
         'GROUP BY chat) AS m2 ' +
         'ON m1.chat = m2.chat AND m1.id = m2.id'
     ).then((res) => res)
@@ -208,50 +197,17 @@ const getFirstUnseenMessage = async (
         return err([401, getFirstUnseenMessageResult[1]]);
     }
 
-    const notFoundChatIDs = [];
-    for (const chatWithLastMessageDetail of chatsWithLastMessageDetail) {
-        const row = getFirstUnseenMessageResult.rows.find(e => e.chat === chatWithLastMessageDetail.id);
-        if (row === undefined) {
-            notFoundChatIDs.push(chatWithLastMessageDetail.id);
-        }
-    }
-
-    let getFirstUnseenThreadMessageResult: undefined | (QueryResult<any> | any[]) = undefined;
-    if (notFoundChatIDs.length !== 0) {
-        getFirstUnseenThreadMessageResult = await client.query(
-            'SELECT m1.id, m1.chat, m1.content, m1.created_at, m1.user FROM message AS m1' +
-            'INNER JOIN' +
-            '(SELECT chat, min(id) as id FROM message' +
-            'WHERE NOT seen_by ? ' + userID +
-            ' AND chat in \'[' + notFoundChatIDs.join(', ') + ']\' ' +
-            'GROUP BY chat) AS m2 ' +
-            'ON m1.chat = m2.chat AND m1.id = m2.id'
-        ).then((res) => res)
-            .catch((error) => [401, error]);
-        if (Array.isArray(getFirstUnseenThreadMessageResult)) {
-            return err([401, getFirstUnseenThreadMessageResult[1]]);
-        }
-    }
-
-
-    for (const chatWithLastMessageDetail of chatsWithLastMessageDetail) {
+    for (const threadWithLastMessageDetail of threadsWithLastMessageDetail) {
         let firstUnseenMessageID = null;
-        let isFirstUnseenFromThread = false;
         const mainChatLastUnseenMessage = getFirstUnseenMessageResult.rows
-            .find(e => e.chat === chatWithLastMessageDetail.id);
+            .find(e => e.chat === threadWithLastMessageDetail.id);
         if (mainChatLastUnseenMessage !== undefined) {
             firstUnseenMessageID = mainChatLastUnseenMessage.id;
-
-            const row = getFirstUnseenThreadMessageResult?.rows.find(e => e.chat === chatWithLastMessageDetail.id);
-            if (row !== undefined) {
-                isFirstUnseenFromThread = true;
-            }
         }
 
         result.push({
-            ...chatWithLastMessageDetail,
-            firstUnseenMessageID,
-            isFirstUnseenFromThread
+            ...threadWithLastMessageDetail,
+            firstUnseenMessageID
         });
     }
 

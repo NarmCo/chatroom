@@ -39,6 +39,12 @@ const ThreadTable = {
             default: false,
             nullable: false,
             title: 'chat_owner'
+        },
+        lastMessageSentAt: {
+            type: 'timestamp with time zone',
+            default: false,
+            nullable: false,
+            title: 'last_message_sent_at'
         }
     }
 } as const;
