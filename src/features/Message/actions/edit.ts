@@ -63,7 +63,8 @@ const checkMessageExistence = async (
         context =>
             context.colsAnd({
                 id: ['=', id],
-                userID: ['=', userID]
+                userID: ['=', userID],
+                isDeleted: ['= false']
             })
     ).exec(client, ['get', 'one']);
     if (!checkMessageExistenceResult.ok) {
