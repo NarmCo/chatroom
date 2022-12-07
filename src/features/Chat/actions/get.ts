@@ -195,7 +195,7 @@ const getFirstUnseenMessage = async (
         'SELECT m1.id, m1.chat FROM message AS m1' +
         'INNER JOIN' +
         '(SELECT chat, min(id) as id FROM message' +
-        'WHERE NOT users ? ' + userID + ' AND thread = null ' +
+        'WHERE NOT seen_by ? ' + userID + ' AND thread = null ' +
         ' AND chat in \'[' + chatsWithLastMessageDetail.map(e => e.id).join(', ') + ']\' ' +
         'GROUP BY chat) AS m2 ' +
         'ON m1.chat = m2.chat AND m1.id = m2.id'
@@ -217,7 +217,7 @@ const getFirstUnseenMessage = async (
         'SELECT m1.id, m1.chat, m1.content, m1.created_at, m1.user FROM message AS m1' +
         'INNER JOIN' +
         '(SELECT chat, min(id) as id FROM message' +
-        'WHERE NOT users ? ' + userID +
+        'WHERE NOT seen_by ? ' + userID +
         ' AND chat in \'[' + notFoundChatIDs.join(', ') + ']\' ' +
         'GROUP BY chat) AS m2 ' +
         'ON m1.chat = m2.chat AND m1.id = m2.id'

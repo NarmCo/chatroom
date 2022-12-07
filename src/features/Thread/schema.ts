@@ -1,5 +1,5 @@
-import { createEntity, createModelUtils, Model } from '@mrnafisia/type-query';
 import { Chat } from '../Chat/schema';
+import { createEntity, createModelUtils, Model } from '@mrnafisia/type-query';
 
 const ThreadTable = {
     schema: 'general',
@@ -27,6 +27,18 @@ const ThreadTable = {
                 column: 'id',
                 onDelete: 'cascade'
             }
+        },
+        threadOwnerID: {
+            type: 'smallint',
+            default: false,
+            nullable: false,
+            title: 'thread_owner'
+        },
+        chatOwnerID: {
+            type: 'smallint',
+            default: false,
+            nullable: false,
+            title: 'chat_owner'
         }
     }
 } as const;
