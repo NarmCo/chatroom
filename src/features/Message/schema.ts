@@ -87,7 +87,8 @@ const MessageTable = {
             default: false,
             nullable: false,
             title: 'is_edited'
-        },isDeleted: {
+        },
+        isDeleted: {
             type: 'boolean',
             default: false,
             nullable: false,
