@@ -50,7 +50,8 @@ const add = async (
             userIDs: userIDs.map(e => e.toString()),
             ownerID: connection.userID,
             threadIDs: [],
-            isGroup
+            isGroup,
+            lastMessageSentAt: new Date()
         }
     );
 
@@ -116,7 +117,8 @@ const addChat = async (
         'userIDs',
         'threadIDs',
         'ownerID',
-        'isGroup'
+        'isGroup',
+        'lastMessageSentAt'
     ]>
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     const addChatResult = await Chat.insert(

@@ -39,6 +39,12 @@ const ChatTable = {
             default: false,
             nullable: false,
             title: 'is_group'
+        },
+        lastMessageSentAt: {
+            type: 'timestamp with time zone',
+            default: false,
+            nullable: false,
+            title: 'last_message_sent_at'
         }
     }
 } as const;
@@ -48,7 +54,8 @@ type ChatModel<R extends readonly (keyof typeof ChatTable['columns'])[] = [
     'title',
     'userIDs',
     'ownerID',
-    'isGroup'
+    'isGroup',
+    'lastMessageSentAt'
 ],
     O extends readonly (keyof typeof ChatTable['columns'])[] = [
         'threadIDs'
