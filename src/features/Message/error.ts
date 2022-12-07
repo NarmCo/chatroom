@@ -6,6 +6,7 @@ type Error =
     | [205] /* invalid forwardID */
     | [206] /* invalid fileID */
     | [207] /* message content should be provided from user or forwarding message */
+    | [208] /* invalid id */
     | [301] /* chat does not exist or user is not a member */
     | [302] /* thread does not exist */
     | [303] /* message does not exist */
