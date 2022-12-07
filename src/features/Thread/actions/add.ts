@@ -35,7 +35,8 @@ const add = async (
         {
             ...thread,
             threadOwnerID: connection.userID,
-            chatOwnerID
+            chatOwnerID,
+            lastMessageSentAt: new Date()
         }
     );
 
@@ -83,7 +84,7 @@ const checkChatExistence = async (
 
 const addThread = async (
     { client }: Omit<Connection, 'userID'>,
-    thread: ThreadModel<['title', 'chatID', 'threadOwnerID', 'chatOwnerID']>
+    thread: ThreadModel<['title', 'chatID', 'threadOwnerID', 'chatOwnerID', 'lastMessageSentAt']>
 ): Promise<Result<{ id: ThreadModel['id']; histories: HistoryRow[] }, Error>> => {
     const addThreadResult = await Thread.insert(
         [thread],

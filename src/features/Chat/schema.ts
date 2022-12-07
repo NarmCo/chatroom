@@ -22,12 +22,6 @@ const ChatTable = {
             nullable: false,
             title: 'users'
         },
-        threadIDs: {
-            type: 'jsonb',
-            default: false,
-            nullable: false,
-            title: 'threads'
-        },
         ownerID: {
             type: 'smallint',
             default: false,
@@ -57,9 +51,7 @@ type ChatModel<R extends readonly (keyof typeof ChatTable['columns'])[] = [
     'isGroup',
     'lastMessageSentAt'
 ],
-    O extends readonly (keyof typeof ChatTable['columns'])[] = [
-        'threadIDs'
-    ]> = Model<typeof ChatTable['columns'], R, O>;
+    O extends readonly (keyof typeof ChatTable['columns'])[] = []> = Model<typeof ChatTable['columns'], R, O>;
 const ChatModel = createModelUtils(Chat.table.columns);
 
 export { Chat, ChatModel };

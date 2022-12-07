@@ -25,7 +25,7 @@ const add = async (
     }
 
     // is user adding an existing private chat ?
-    if (userIDs.length === 1) {
+    if (!isGroup) {
         const checkChatExistenceResult = await checkChatExistence(
             connection,
             userIDs[0]
@@ -49,7 +49,6 @@ const add = async (
             title,
             userIDs: userIDs.map(e => e.toString()),
             ownerID: connection.userID,
-            threadIDs: [],
             isGroup,
             lastMessageSentAt: new Date()
         }
@@ -77,6 +76,10 @@ const checkValidation = (
     }
     if (!ChatModel.isGroup.Validate(isGroup)) {
         return err([203]);
+    }
+
+    if (isGroup && userIDs.length !== 1){
+        return err([205]);
     }
 
     return ok(undefined);
@@ -115,7 +118,6 @@ const addChat = async (
     chat: ChatModel<[
         'title',
         'userIDs',
-        'threadIDs',
         'ownerID',
         'isGroup',
         'lastMessageSentAt'
@@ -141,7 +143,6 @@ const addChat = async (
                     id: addChatResult.value.id,
                     title: chat.title,
                     userIDs: chat.userIDs,
-                    threadIDs: chat.threadIDs,
                     ownerID: chat.ownerID,
                     isGroup: chat.isGroup
                 }

@@ -50,7 +50,7 @@ const MessageTable = {
         },
         createdAt: {
             type: 'timestamp with time zone',
-            default: 'created-at',
+            default: false,
             nullable: false,
             title: 'created_at'
         },
@@ -79,8 +79,19 @@ const MessageTable = {
         fileID: {
             type: 'bigint',
             default: false,
-            nullable: true,
+            nullable: false,
             title: 'file'
+        },
+        isEdited: {
+            type: 'boolean',
+            default: false,
+            nullable: false,
+            title: 'is_edited'
+        },isDeleted: {
+            type: 'boolean',
+            default: false,
+            nullable: false,
+            title: 'is_deleted'
         }
     }
 } as const;
@@ -95,7 +106,9 @@ type MessageModel<R extends readonly (keyof typeof MessageTable['columns'])[] = 
     'userID',
     'seenBy',
     'forward',
-    'fileID'
+    'fileID',
+    'isEdited',
+    'isDeleted'
 ],
     O extends readonly (keyof typeof MessageTable['columns'])[] = []> = Model<typeof MessageTable['columns'], R, O>;
 const MessageModel = createModelUtils(Message.table.columns);
