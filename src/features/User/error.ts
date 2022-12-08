@@ -2,6 +2,7 @@ type Error =
     | [101] /* can not parse username */
     | [102] /* can not parse password */
     | [103] /* can not parse name */
+    | [104] /* can not parse fileID */
     | [105] /* can not parse phone */
     | [106] /* can not parse id */
     | [107] /* can not parse get options */

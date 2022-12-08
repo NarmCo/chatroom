@@ -12,14 +12,17 @@ const get = async (
     start: bigint,
     step: number
 ): Promise<Result<{
-    id: ThreadModel['id'],
-    title: ThreadModel['title'],
-    firstUnseenMessageID: MessageModel['id'] | null,
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
-}[], Error>> => {
+    result: {
+        id: ThreadModel['id'],
+        title: ThreadModel['title'],
+        firstUnseenMessageID: MessageModel['id'] | null,
+        lastMessageID: MessageModel['id'],
+        lastMessageContent: MessageModel['content'],
+        lastMessageCreatedAt: MessageModel['createdAt'],
+        lastMessageUserID: MessageModel['userID']
+    }[],
+    length: number
+}, Error>> => {
 
     // find user chats using connection.userID
     const getThreadsResult = await getThreads(
@@ -42,10 +45,18 @@ const get = async (
     }
 
     // find last unseen message id
-    return await getFirstUnseenMessage(
+    const getFirstUnseenMessageResult = await getFirstUnseenMessage(
         connection,
         getLastMessagesResult.value
     );
+    if (!getFirstUnseenMessageResult.ok) {
+        return getFirstUnseenMessageResult;
+    }
+
+    return ok({
+        result: getFirstUnseenMessageResult.value,
+        length: getThreadsResult.value.length
+    });
 };
 
 const getThreads = async (
