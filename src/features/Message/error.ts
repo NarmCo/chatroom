@@ -1,4 +1,13 @@
 type Error =
+    | [101] /* can not parse chatID */
+    | [102] /* can not parse content */
+    | [103] /* can not parse threadID */
+    | [104] /* can not parse messageID */
+    | [105] /* can not parse forwardID */
+    | [106] /* can not parse fileID */
+    | [107] /* can not parse start */
+    | [108] /* can not parse step */
+    | [109] /* can not parse orderDirection */
     | [201] /* invalid content */
     | [202] /* invalid chatID */
     | [203] /* invalid threadID */
