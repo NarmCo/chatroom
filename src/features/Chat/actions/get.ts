@@ -1,26 +1,29 @@
-import { Connection } from '../../../utils/connection';
-import { err, ok, Result } from 'never-catch';
-import { Chat, ChatModel } from '../schema';
-import { MessageModel } from '../../Message/schema';
 import Error from '../error';
-import { Context, U } from '@mrnafisia/type-query';
 import { QueryResult } from 'pg';
+import { Chat, ChatModel } from '../schema';
+import { err, ok, Result } from 'never-catch';
+import { Context, U } from '@mrnafisia/type-query';
+import { MessageModel } from '../../Message/schema';
+import { Connection } from '../../../utils/connection';
 
 const get = async (
     connection: Connection,
     start: bigint,
     step: number
 ): Promise<Result<{
-    id: ChatModel['id'],
-    title: ChatModel['title'],
-    isGroup: ChatModel['isGroup'],
-    firstUnseenMessageID: MessageModel['id'] | null,
-    isFirstUnseenFromThread: boolean,
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
-}[], Error>> => {
+    result: {
+        id: ChatModel['id'],
+        title: ChatModel['title'],
+        isGroup: ChatModel['isGroup'],
+        firstUnseenMessageID: MessageModel['id'] | null,
+        isFirstUnseenFromThread: boolean,
+        lastMessageID: MessageModel['id'],
+        lastMessageContent: MessageModel['content'],
+        lastMessageCreatedAt: MessageModel['createdAt'],
+        lastMessageUserID: MessageModel['userID']
+    }[],
+    length: number
+}, Error>> => {
 
     // find user chats using connection.userID
     const getChatsResult = await getChats(
@@ -42,10 +45,18 @@ const get = async (
     }
 
     // find last unseen message id
-    return await getFirstUnseenMessage(
+    const getFirstUnseenMessageResult = await getFirstUnseenMessage(
         connection,
         getLastMessagesResult.value
     );
+    if (!getFirstUnseenMessageResult.ok) {
+        return getFirstUnseenMessageResult;
+    }
+
+    return ok({
+        result: getFirstUnseenMessageResult.value,
+        length: getChatsResult.value.length
+    });
 };
 
 const getChats = async (

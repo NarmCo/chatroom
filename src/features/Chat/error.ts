@@ -1,4 +1,10 @@
 type Error =
+    | [101] /* can not parse title */
+    | [102] /* can not parse userIDs */
+    | [103] /* can not parse isGroup */
+    | [104] /* can not parse id */
+    | [105] /* can not parse start */
+    | [106] /* can not parse step */
     | [201] /* invalid title */
     | [202] /* invalid userID */
     | [203] /* invalid isGroup */
