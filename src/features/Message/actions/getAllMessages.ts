@@ -3,17 +3,17 @@ import { Chat, ChatModel } from '../../Chat/schema';
 import { Thread, ThreadModel } from '../../Thread/schema';
 import { err, ok, Result } from 'never-catch';
 import { Message, MessageModel } from '../schema';
-import { HistoryRow } from '../../../utils/historyRow';
 import Error from '../error';
+import Constant from '../constant';
 import { U } from '@mrnafisia/type-query';
-import { FEATURES } from '../../../utils/features';
-import Operation from '../operation';
 
-const seen = async (
+const getAllMessages = async (
     connection: Connection,
     chatID?: ChatModel['id'],
     threadID?: ThreadModel['id']
-): Promise<Result<{ ids: MessageModel['id'][]; histories: HistoryRow[] }, Error>> => {
+): Promise<Result<MessageModel<['id', 'content', 'messageID',
+    'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
+    'isEdited', 'isDeleted']>[], Error>> => {
     // validation
     const checkValidationResult = checkValidation(
         chatID,
@@ -45,12 +45,7 @@ const seen = async (
         }
     }
 
-    // edit messages
-    return await editMessages(
-        connection,
-        chatID,
-        threadID
-    );
+    return await getMessages(connection, chatID, threadID);
 };
 
 const checkValidation = (
@@ -71,6 +66,8 @@ const checkValidation = (
 
     return ok(undefined);
 };
+
+export default getAllMessages;
 
 const checkChatExistence = async (
     { client }: Omit<Connection, 'userID'>,
@@ -106,49 +103,36 @@ const checkThreadExistence = async (
     return ok(undefined);
 };
 
-const editMessages = async (
-    { client, userID }: Connection,
+const getMessages = async (
+    { client }: Omit<Connection, 'userID'>,
     chatID?: ChatModel['id'],
     threadID?: ThreadModel['id']
-): Promise<Result<{ ids: MessageModel['id'][]; histories: HistoryRow[] }, Error>> => {
-    const histories: HistoryRow[] = [];
-    const editMessagesResult = await Message.update(
-        {
-            seenBy: U.conOp(Message.context.col('seenBy'), [userID.toString()])
-        },
+): Promise<Result<MessageModel<['id', 'content', 'messageID',
+    'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
+    'isEdited', 'isDeleted']>[], Error>> => {
+    const getMessagesResult = await Message.select(
+        ['id', 'content', 'messageID',
+            'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
+            'isEdited', 'isDeleted'] as const,
         context =>
             U.andAllOp([
                 context.colCmp('chatID', '=', chatID),
                 context.colCmp('threadID', '=', threadID),
-                context.colNull('threadID', chatID === undefined ? '!= null' : '= null'),
-                U.notOp(context.colJson('seenBy', '?', userID.toString()))
+                context.colNull('threadID', chatID === undefined ? '!= null' : '= null')
             ]),
-        ['id'] as const,
         {
             ignoreInWhere: true
         }
     ).exec(client, []);
-    if (!editMessagesResult.ok) {
-        return err([401, editMessagesResult.error]);
+    if (!getMessagesResult.ok) {
+        return err([401, getMessagesResult.error]);
     }
 
-    for (const editedMessage of editMessagesResult.value) {
-        histories.push({
-            feature: FEATURES.Message,
-            table: Message.table.title,
-            row: BigInt(editedMessage.id),
-            operations: [Operation.SEEN],
-            data: {
-                id: editedMessage.id,
-                userID
-            }
-        });
+    for (let i = 0; i < getMessagesResult.value.length; ++i) {
+        if (getMessagesResult.value[i].isDeleted === true) {
+            getMessagesResult.value[i].content = Constant.DELETED_MESSAGE_CONTENT;
+        }
     }
 
-    return ok({
-        ids: editMessagesResult.value.map(e => e.id),
-        histories
-    });
+    return ok(getMessagesResult.value);
 };
-
-export default seen;

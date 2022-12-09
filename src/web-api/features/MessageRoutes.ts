@@ -9,8 +9,12 @@ import add from '../../features/Message/actions/add';
 import edit from '../../features/Message/actions/edit';
 import remove from '../../features/Message/actions/remove';
 import get from '../../features/Message/actions/get';
+import { ChatModel } from '../../features/Chat/schema';
+import getAllMessages from '../../features/Message/actions/getAllMessages';
+import seen from '../../features/Message/actions/seen';
 
 const MessageRoute = '/message';
+const getAllMessagesRoute = '/getAllMessages';
 
 const message = (app: Express) => {
     app.post(
@@ -159,6 +163,59 @@ const message = (app: Express) => {
             }
         )
     );
+    app.put(
+        MessageRoute,
+        client_verify_log_histories_message(
+            MessageRoute + ':edit',
+            async (req, _res, connection) => {
+                let chatID: ChatModel['id'] | undefined = undefined;
+                if (req.body.chatID !== undefined) {
+                    chatID = ChatModel.id.Parse(req.body.chatID);
+                    if (chatID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 101
+                        });
+                    }
+                }
+
+                let threadID: ThreadModel['id'] | undefined = undefined;
+                if (req.body.threadID !== undefined) {
+                    threadID = ThreadModel.id.Parse(req.body.threadID);
+                    if (threadID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 103
+                        });
+                    }
+                }
+
+                // action
+                const actionResult = await seen(
+                    connection,
+                    chatID,
+                    threadID
+                );
+                if (!actionResult.ok) {
+                    const [code, data] = actionResult.error;
+                    return err({
+                        feature: FEATURES.Message,
+                        code,
+                        data
+                    });
+                }
+
+                return ok({
+                    feature: FEATURES.Message,
+                    code: 7898,
+                    histories: actionResult.value.histories,
+                    data: {
+                        ids: actionResult.value.ids
+                    }
+                });
+            }
+        )
+    );
     app.delete(
         MessageRoute,
         client_verify_log_histories_message(
@@ -203,11 +260,11 @@ const message = (app: Express) => {
             MessageRoute + 'get',
             async (req, _res, connection) => {
                 const id = MessageModel.id.Parse(req.query.id);
-                if (id === undefined){
+                if (id === undefined) {
                     return err({
                         feature: FEATURES.Message,
                         code: 104
-                    })
+                    });
                 }
 
                 const step = req.query.step;
@@ -219,11 +276,11 @@ const message = (app: Express) => {
                 }
 
                 const orderDirection = req.query.orderDirection;
-                if (!isOrderDirection(orderDirection)){
+                if (!isOrderDirection(orderDirection)) {
                     return err({
                         feature: FEATURES.Message,
                         code: 109
-                    })
+                    });
                 }
 
                 // action
@@ -233,7 +290,7 @@ const message = (app: Express) => {
                     orderDirection,
                     step
                 );
-                if (!actionResult.ok){
+                if (!actionResult.ok) {
                     const [code, data] = actionResult.error;
                     return err({
                         feature: FEATURES.Message,
@@ -250,11 +307,67 @@ const message = (app: Express) => {
                     data: {
                         messages: actionResult.value
                     }
-                })
+                });
 
             }
         )
-    )
+    );
+    app.get(
+        getAllMessagesRoute,
+        client_verify_log_histories_message(
+            getAllMessagesRoute + 'get',
+            async (req, _res, connection) => {
+
+                let chatID: ChatModel['id'] | undefined = undefined;
+                if (req.query.chatID !== undefined) {
+                    chatID = ChatModel.id.Parse(req.query.chatID);
+                    if (chatID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 101
+                        });
+                    }
+                }
+
+                let threadID: ThreadModel['id'] | undefined = undefined;
+                if (req.query.threadID !== undefined) {
+                    threadID = ThreadModel.id.Parse(req.query.threadID);
+                    if (threadID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 103
+                        });
+                    }
+                }
+
+                // action
+                const actionResult = await getAllMessages(
+                    connection,
+                    chatID,
+                    threadID
+                );
+                if (!actionResult.ok) {
+                    const [code, data] = actionResult.error;
+                    return err({
+                        feature: FEATURES.Message,
+                        code,
+                        data
+                    });
+                }
+
+
+                return ok({
+                    feature: FEATURES.Message,
+                    code: 7898,
+                    histories: [],
+                    data: {
+                        messages: actionResult.value
+                    }
+                });
+
+            }
+        )
+    );
 };
 
 
