@@ -166,7 +166,7 @@ const thread = (app: Express) => {
                     });
                 }
 
-                const chatID = ThreadModel.chatID.Parse(req.body.chatID);
+                const chatID = ThreadModel.chatID.Parse(req.query.chatID);
                 if (chatID === undefined) {
                     return err({
                         feature: FEATURES.Thread,
@@ -184,7 +184,7 @@ const thread = (app: Express) => {
                 if (!actionResult.ok) {
                     const [code, data] = actionResult.error;
                     return err({
-                        feature: FEATURES.Chat,
+                        feature: FEATURES.Thread,
                         code,
                         data
                     });
@@ -206,10 +206,10 @@ const thread = (app: Express) => {
 
 
 const isNumber = (value: any): value is number => {
-    return typeof value === 'number';
+    return value as number !== undefined;
 };
 const isBigInt = (value: any): value is bigint => {
-    return typeof value === 'bigint';
+    return value as bigint !== undefined;
 };
 
 export default thread;

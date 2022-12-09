@@ -130,12 +130,12 @@ const getLastMessages = async (
     }[] = [];
     const getLastMessages = await client.query(
         'SELECT m1.id, m1.thread, m1.content, m1.user, m1.created_at' +
-        ' FROM message as m1' +
+        ' FROM general.message as m1' +
         ' inner join' +
-        ' (SELECT thread, max(created_at) as created_at FROM message WHERE' +
-        ' thread in ' + '\'[' + threads.map(e => e.id).join(', ') + ']\'' +
-        'group by thread) as m2' +
-        ' on m1.chat = m2.chat and m1.created_at = m2.created_at'
+        ' (SELECT thread, max(created_at) as created_at FROM general.message WHERE' +
+        ' thread in ' + '(' + threads.map(e => e.id).join(', ') + ')' +
+        ' group by thread) as m2' +
+        ' on m1.thread = m2.thread and m1.created_at = m2.created_at'
     )
         .then((res) => res)
         .catch((error) => [401, error]);
@@ -145,7 +145,7 @@ const getLastMessages = async (
     }
 
     for (const thread of threads) {
-        const row = getLastMessages.rows.find(e => e.thread === thread.id);
+        const row = getLastMessages.rows.find(e => BigInt(e.thread) === thread.id);
         if (row === undefined) {
             return err([401, null]);
         }
@@ -195,13 +195,13 @@ const getFirstUnseenMessage = async (
     }[] = [];
 
     const getFirstUnseenMessageResult = await client.query(
-        'SELECT m1.id, m1.thread FROM message AS m1' +
-        'INNER JOIN' +
-        '(SELECT thread, min(id) as id FROM message' +
-        'WHERE NOT seen_by ? ' + userID +
-        ' AND thread in \'[' + threadsWithLastMessageDetail.map(e => e.id).join(', ') + ']\' ' +
-        'GROUP BY chat) AS m2 ' +
-        'ON m1.chat = m2.chat AND m1.id = m2.id'
+        'SELECT m1.id, m1.thread FROM general.message AS m1' +
+        ' INNER JOIN' +
+        ' (SELECT thread, min(id) as id FROM general.message' +
+        ' WHERE NOT seen_by ? \'' + userID +
+        '\' AND thread in (' + threadsWithLastMessageDetail.map(e => e.id).join(', ') + ') ' +
+        ' GROUP BY thread) AS m2 ' +
+        ' ON m1.thread = m2.thread AND m1.id = m2.id'
     ).then((res) => res)
         .catch((error) => [401, error]);
     if (Array.isArray(getFirstUnseenMessageResult)) {
@@ -211,7 +211,7 @@ const getFirstUnseenMessage = async (
     for (const threadWithLastMessageDetail of threadsWithLastMessageDetail) {
         let firstUnseenMessageID = null;
         const mainChatLastUnseenMessage = getFirstUnseenMessageResult.rows
-            .find(e => e.chat === threadWithLastMessageDetail.id);
+            .find(e => BigInt(e.thread) === threadWithLastMessageDetail.id);
         if (mainChatLastUnseenMessage !== undefined) {
             firstUnseenMessageID = mainChatLastUnseenMessage.id;
         }

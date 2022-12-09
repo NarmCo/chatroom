@@ -1,10 +1,12 @@
 {
-  "chat": {},
-  "file": {},
-  "history": {},
-  "log": {},
-  "message": {},
-  "thread": {},
-  "token": {},
-  "user": {}
+  "Null": {},
+  "Core": {},
+  "Chat": {},
+  "File": {},
+  "History": {},
+  "Log": {},
+  "Message": {},
+  "Thread": {},
+  "Token": {},
+  "User": {}
 }

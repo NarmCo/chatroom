@@ -1,0 +1,55 @@
+### Login
+POST {{vpsUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "bzare",
+  "password": "12345678"
+}
+
+### Logout
+POST {{baseUrl}}/logout
+Content-Type: application/json
+secret: {{normalSecret}}
+
+{}
+
+### Extend
+PATCH {{baseUrl}}/extend
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{}
+
+### WhoAmI
+GET {{vpsUrl}}/whoAmI
+Content-Type: application/json
+secret: {{rootSecret}}
+
+### LogoutALL
+POST {{baseUrl}}/logout-all
+Content-Type: application/json
+
+{
+  "username": "normalUser",
+  "password": "normalPassword"
+}
+
+### Verify
+GET {{baseUrl}}/verify
+secret: {{normalSecret}}
+
+### Get Permission
+GET {{baseUrl}}/token-permission?userIDs=[1,2]
+secret: {{normalSecret}}
+
+### Set Permission
+PATCH {{baseUrl}}/token-permission
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "userID": "1",
+  "extend": false,
+  "login": true
+}

@@ -1,5 +1,5 @@
 ### ADD
-POST {{baseUrl}}/chat
+POST {{vpsUrl}}/chat
 Content-Type: application/json
 secret: {{rootSecret}}
 

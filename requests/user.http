@@ -1,0 +1,59 @@
+### Add
+POST {{baseUrl}}/user
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "username": "test_user_name",
+  "password": "testPassword",
+  "name": "testName",
+  "email": "test@email.email",
+  "phone": "+989111111111"
+}
+
+### Edit
+PATCH {{baseUrl}}/user
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "id": "2",
+  "password": "normalPassword"
+}
+
+### Remove
+DELETE {{baseUrl}}/user
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "id": "18"
+}
+
+### Get
+GET {{baseUrl}}/user?fields=["id","username"]&start=0&step=25&orders=[{"by":"id","direction":"asc"}]&isAdmin=true
+Content-Type: application/json
+secret: {{rootSecret}}
+
+
+### Set Permission
+PATCH {{baseUrl}}/user-permission
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "userID": 1,
+  "add": false,
+  "edit": true,
+  "remove": true,
+  "get": true
+}
+
+### Get Permission
+GET {{baseUrl}}/user-permission?userIDs=["1", "2"]
+Content-Type: application/jsonzxc
+secret: {{rootSecret}}
+
+{
+  "userIDs": ["1", "2"]
+}

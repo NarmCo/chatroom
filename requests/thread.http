@@ -7,3 +7,8 @@ secret: {{rootSecret}}
   "title": "first thread",
   "chatID": 21
 }
+
+### GET
+GET {{baseUrl}}/thread?start=0&step=5&chatID=21
+Content-Type: application/json
+secret: {{toorSecret}}

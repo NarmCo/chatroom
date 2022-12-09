@@ -49,16 +49,7 @@ module.exports = {
         new WebpackShellPluginNext({
             onBuildStart: {
                 scripts: [
-                    `${rmDirKeyword} "${path.join(__dirname, 'build-prd')}"`,
-                    `node ${path.join(
-                        __dirname,
-                        'scripts',
-                        'generateDispatchCaller.js'
-                    )} --source ${path.join(
-                        __dirname,
-                        'src',
-                        'features'
-                    )} --destination ${path.join(__dirname, 'src', 'utils')}`,
+                    `${rmDirKeyword} "${path.join(__dirname, 'build-prd')}"`
                 ],
                 blocking: true,
                 parallel: false
