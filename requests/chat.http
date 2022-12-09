@@ -1,0 +1,15 @@
+### ADD
+POST {{baseUrl}}/chat
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "title": "firstChat",
+  "userIDs": [2],
+  "isGroup": false
+}
+
+### GET
+GET {{baseUrl}}/chat?start=0&step=5
+Content-Type: application/json
+secret: {{toorSecret}}

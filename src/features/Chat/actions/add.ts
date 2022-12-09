@@ -53,8 +53,6 @@ const add = async (
             lastMessageSentAt: new Date()
         }
     );
-
-
 };
 
 const checkValidation = (
@@ -130,7 +128,6 @@ const addChat = async (
     if (!addChatResult.ok) {
         return err([401, addChatResult.error]);
     }
-
     return ok({
         id: addChatResult.value.id,
         histories: [

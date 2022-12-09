@@ -1,0 +1,11 @@
+### ADD
+POST {{baseUrl}}/message
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "chatID": "21",
+  "content": "firstMessage"
+}
+
+

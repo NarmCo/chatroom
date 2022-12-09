@@ -66,7 +66,7 @@ const client_verify_log_histories_message =
                 const response = { feature, code, data };
 
                 const now = new Date();
-                // log
+
                 const addLogResult = await addLog(
                     { client },
                     {
@@ -85,7 +85,6 @@ const client_verify_log_histories_message =
                         data
                     });
                 }
-
                 // histories
                 if (histories.length !== 0) {
                     const addHistoriesResult = await addHistories(
@@ -106,7 +105,10 @@ const client_verify_log_histories_message =
 
                 return actionResult.ok ? ok(response) : err(response);
             }, 'serializable')
-            .catch(e => err({ feature: null, code: 0, data: e }));
+            .catch(e => {
+                console.log(e);
+                return err({ feature: null, code: 0, data: e })
+            });
 
         if (!response.ok) {
             await logError({

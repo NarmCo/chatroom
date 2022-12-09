@@ -201,6 +201,7 @@ const chat = (app: Express) => {
             ChatRoute + ':get',
             async (req, _res, connection) => {
                 const start = req.query.start;
+                console.log(start);
                 if (!isBigInt(start)) {
                     return err({
                         feature: FEATURES.Chat,
@@ -249,10 +250,10 @@ const isString = (value: any): value is string => {
     return typeof value === 'string';
 };
 const isNumber = (value: any): value is number => {
-    return typeof value === 'number';
+    return value as number !== undefined;
 };
 const isBigInt = (value: any): value is bigint => {
-    return typeof value === 'bigint';
+    return value as bigint !== undefined;
 };
 
 export default chat;

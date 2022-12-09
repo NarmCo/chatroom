@@ -75,7 +75,6 @@ const removeExpiredTokensAndCountTheRest = async ({
         }
         removeResult.value.forEach(removedToken =>
             histories.push({
-                yearCompanyID: null,
                 feature: FEATURES.Token,
                 table: Token.table.title,
                 row: BigInt(removedToken.id),

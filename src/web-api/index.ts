@@ -22,11 +22,11 @@ app.use(fileUpload({
     tempFileDir: '/tmp/'
 }));
 
-app.use(chat);
-app.use(file);
-app.use(message);
-app.use(thread);
-app.use(token);
-app.use(user);
+chat(app);
+file(app);
+message(app);
+thread(app);
+token(app);
+user(app);
 
 app.listen(port, () => console.log(`chatroom listening on ${port}`));

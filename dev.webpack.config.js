@@ -52,15 +52,6 @@ module.exports = {
             onBuildStart: {
                 scripts: [
                     `${rmDirKeyword} "${path.join(__dirname, 'build-dev')}"`,
-                    `node ${path.join(
-                        __dirname,
-                        'scripts',
-                        'generateDispatchCaller.js'
-                    )} --source ${path.join(
-                        __dirname,
-                        'src',
-                        'features'
-                    )} --destination ${path.join(__dirname, 'src', 'utils')}`
                 ],
                 blocking: true,
                 parallel: false

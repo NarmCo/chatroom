@@ -38,7 +38,7 @@ const MessageTable = {
             title: 'chat',
             reference: {
                 table: Chat.table,
-                column: 'chat',
+                column: 'id',
                 onDelete: 'cascade'
             }
         },
