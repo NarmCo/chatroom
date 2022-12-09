@@ -262,7 +262,7 @@ const isOrderDirection = (value: any): value is string => {
     return value === 'asc' || value === 'desc' || value === 'middle';
 };
 const isNumber = (value: any): value is number => {
-    return typeof value === 'number';
+    return value as number !== undefined;
 };
 
 export default message;

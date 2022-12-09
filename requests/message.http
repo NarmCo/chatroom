@@ -9,4 +9,7 @@ secret: {{rootSecret}}
   "threadID": 1
 }
 
-
+### GET
+GET {{baseUrl}}/message?id=1&orderDirection=asc&step=5
+Content-Type: application/json
+secret: {{rootSecret}}

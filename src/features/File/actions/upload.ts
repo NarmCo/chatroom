@@ -35,7 +35,7 @@ const upload = async (
 
     const { id, histories } = addFileResult.value;
     // move file
-    await file.mv('/' + fileType + '/' + id);
+    await file.mv(__dirname + '/' +'files' + '/' + fileType + '/' + id);
 
     return ok({
         id,
@@ -47,7 +47,7 @@ const checkValidation = (
     mimeType: string
 ): Result<FileModel['fileType'], Error> => {
     let fileType: FileModel['fileType'];
-    if (['jpg', 'jpeg', 'png'].includes(mimeType)){
+    if (['image/jpeg', 'image/png'].includes(mimeType)){
         fileType = 'image';
     } else if (['doc', 'docx', 'pdf', 'xls', 'xlsx', 'txt'].includes(mimeType)){
         fileType = 'document'

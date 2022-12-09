@@ -18,6 +18,7 @@ type Error =
     | [208] /* invalid id */
     | [209] /* invalid order direction */
     | [210] /* invalid step */
+    | [211] /* chatID and threadID can not be undefined */
     | [301] /* chat does not exist or user is not a member */
     | [302] /* thread does not exist */
     | [303] /* message does not exist */

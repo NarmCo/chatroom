@@ -101,7 +101,7 @@ const getMessagesMiddle = async (
         ' seenBy, forward, filedID, isEdited, isDeleted FROM message WHERE ' +
         'chatID = ' + chatID + ' AND threadID = ' + threadID + ' AND id';
     const getMessagesResult = await client.query(
-        '(' + selectColumns + ' > ' + id + ' LIMIT ' + step + ')' +
+        '(' + selectColumns + ' >= ' + id + ' LIMIT ' + step + ')' +
         ' UNION ' +
         '(' + selectColumns + '<' + id + 'LIMIT' + step + ')'
     ).then((res) => res)
@@ -135,7 +135,7 @@ const getMessagesMiddle = async (
 const getOrderedMessages = async (
     { client }: Omit<Connection, 'userID'>,
     id: MessageModel['id'],
-    chatID: MessageModel['id'],
+    chatID: MessageModel['chatID'],
     threadID: MessageModel['threadID'],
     orderDirection: string,
     step: number
@@ -149,7 +149,7 @@ const getOrderedMessages = async (
         context => context.colsAnd({
             chatID: ['=', chatID],
             threadID: threadID === null ? ['= null'] : ['=', threadID],
-            id: [orderDirection === 'asc' ? '>' : '<', id]
+            id: [orderDirection === 'asc' ? '>=' : '<=', id]
         }),
         {
             step

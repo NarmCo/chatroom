@@ -9,6 +9,6 @@ secret: {{rootSecret}}
 }
 
 ### GET
-GET {{baseUrl}}/thread?start=0&step=5&chatID=21
+GET {{baseUrl}}/thread?start=0&step=-1&chatID=21
 Content-Type: application/json
 secret: {{toorSecret}}

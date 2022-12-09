@@ -5,6 +5,7 @@ import { err, ok, Result } from 'never-catch';
 import { Context, U } from '@mrnafisia/type-query';
 import { MessageModel } from '../../Message/schema';
 import { Connection } from '../../../utils/connection';
+import { User, UserModel } from '../../User/schema';
 
 const get = async (
     connection: Connection,
@@ -70,7 +71,7 @@ const getChats = async (
             userIDs: ['?', userID.toString()]
         });
     const getChatsResult = await Chat.select(
-        ['id', 'title', 'isGroup'] as const,
+        ['id', 'title', 'isGroup', 'userIDs', 'ownerID'] as const,
         where,
         {
             start,
@@ -85,6 +86,35 @@ const getChats = async (
     ).exec(client, []);
     if (!getChatsResult.ok) {
         return err([401, getChatsResult.error]);
+    }
+
+    const chatsWithoutTitle = getChatsResult.value.filter(e => e.title === null);
+    if (chatsWithoutTitle.length !== 0){
+        const ids: UserModel['id'][] = [];
+        for (const chatWithoutTitle of chatsWithoutTitle){
+            if (!ids.includes(Number((chatWithoutTitle.userIDs as string[])[0]))){
+                ids.push(Number((chatWithoutTitle.userIDs as string[])[0]));
+            }
+            if (!ids.includes(chatWithoutTitle.ownerID)){
+                ids.push(chatWithoutTitle.ownerID);
+            }
+        }
+        const getUsersResult = await User.select(
+            ['id', 'name'] as const,
+            context => context.colList('id', 'in', ids)
+        ).exec(client, []);
+        if (!getUsersResult.ok){
+            return err([401, getUsersResult.error])
+        }
+        for(let i = 0; i < getChatsResult.value.length; ++i){
+            if (getChatsResult.value[i].title === null){
+                if(userID === getChatsResult.value[i].ownerID){
+                    getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === Number((getChatsResult.value[i].userIDs as string[])[0]))?.name as string
+                }else{
+                    getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === getChatsResult.value[i].ownerID)?.name as string
+                }
+            }
+        }
     }
 
     const getLengthResult = await Chat.select(
