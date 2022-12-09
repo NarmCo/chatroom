@@ -139,7 +139,7 @@ const getLastMessages = async (
         ' inner join' +
         ' (SELECT chat, max(created_at) as created_at FROM general.message ' +
         ' WHERE chat in ' + '(' + chats.map(e => e.id).join(', ') + ')' +
-        ' group by chat) as m2' +
+        ' AND thread IS NULL group by chat) as m2' +
         ' on m1.chat = m2.chat and m1.created_at = m2.created_at'
     )
         .then((res) => res)
@@ -244,20 +244,20 @@ const getFirstUnseenMessage = async (
         }
     }
 
-
     for (const chatWithLastMessageDetail of chatsWithLastMessageDetail) {
         let firstUnseenMessageID = null;
         let isFirstUnseenFromThread = false;
-        const mainChatLastUnseenMessage = getFirstUnseenMessageResult.rows
+        const mainChatFirstUnseenMessage = getFirstUnseenMessageResult.rows
             .find(e => BigInt(e.chat) === chatWithLastMessageDetail.id);
-        if (mainChatLastUnseenMessage !== undefined) {
-            firstUnseenMessageID = mainChatLastUnseenMessage.id;
-
-            const row = getFirstUnseenThreadMessageResult?.rows.find(e => e.chat === chatWithLastMessageDetail.id);
+        if (mainChatFirstUnseenMessage !== undefined) {
+            firstUnseenMessageID = mainChatFirstUnseenMessage.id;
+        }else{
+            const row = getFirstUnseenThreadMessageResult?.rows.find(e => BigInt(e.chat) === chatWithLastMessageDetail.id);
             if (row !== undefined) {
                 isFirstUnseenFromThread = true;
             }
         }
+
 
         result.push({
             ...chatWithLastMessageDetail,

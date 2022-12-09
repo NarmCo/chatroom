@@ -201,7 +201,6 @@ const chat = (app: Express) => {
             ChatRoute + ':get',
             async (req, _res, connection) => {
                 const start = req.query.start;
-                console.log(start);
                 if (!isBigInt(start)) {
                     return err({
                         feature: FEATURES.Chat,

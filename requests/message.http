@@ -5,7 +5,8 @@ secret: {{rootSecret}}
 
 {
   "chatID": "21",
-  "content": "firstMessage"
+  "content": "firstMessageInThread",
+  "threadID": 1
 }
 
 

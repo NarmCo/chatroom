@@ -1,0 +1,9 @@
+### ADD
+POST {{baseUrl}}/thread
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "title": "first thread",
+  "chatID": 21
+}
