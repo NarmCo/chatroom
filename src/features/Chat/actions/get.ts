@@ -75,7 +75,7 @@ const getChats = async (
         where,
         {
             start,
-            step,
+            step: Number(step) === -1 ? undefined : step,
             orders: [
                 {
                     by: 'lastMessageSentAt',
