@@ -16,6 +16,8 @@ const get = async (
         id: ChatModel['id'],
         title: ChatModel['title'],
         isGroup: ChatModel['isGroup'],
+        userIDs: UserModel['id'][],
+        ownerID: ChatModel['ownerID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
         lastMessageID: MessageModel['id'],
@@ -64,7 +66,7 @@ const getChats = async (
     { client, userID }: Connection,
     start: bigint,
     step: number
-): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup']>[]; length: number }, Error>> => {
+): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[] & {userIDs: UserModel['id'][]}[]; length: number }, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
         context.colsOr({
             ownerID: ['=', userID],
@@ -107,6 +109,7 @@ const getChats = async (
             return err([401, getUsersResult.error])
         }
         for(let i = 0; i < getChatsResult.value.length; ++i){
+            getChatsResult.value[i].userIDs = (getChatsResult.value[i].userIDs as string[]).map(e => Number(e));
             if (getChatsResult.value[i].title === null){
                 if(userID === getChatsResult.value[i].ownerID){
                     getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === Number((getChatsResult.value[i].userIDs as string[])[0]))?.name as string
@@ -137,18 +140,20 @@ const getChats = async (
 
 
     return ok({
-        result: getChatsResult.value,
+        result: getChatsResult.value as typeof getChatsResult.value & {userIDs: UserModel['id'][]}[],
         length: getLengthResult.value.len
     });
 };
 
 const getLastMessages = async (
     { client }: Omit<Connection, 'userID'>,
-    chats: ChatModel<['id', 'title', 'isGroup']>[]
+    chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs']>[] & {userIDs: UserModel['id'][]}[]
 ): Promise<Result<{
     id: ChatModel['id'],
     title: ChatModel['title'],
     isGroup: ChatModel['isGroup'],
+    userIDs: UserModel['id'][],
+    ownerID: ChatModel['ownerID'],
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
     lastMessageCreatedAt: MessageModel['createdAt'],
@@ -158,6 +163,8 @@ const getLastMessages = async (
         id: ChatModel['id'],
         title: ChatModel['title'],
         isGroup: ChatModel['isGroup'],
+        userIDs: UserModel['id'][],
+        ownerID: ChatModel['ownerID'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
@@ -190,6 +197,8 @@ const getLastMessages = async (
                 id: chat.id,
                 title: chat.title,
                 isGroup: chat.isGroup,
+                ownerID: chat.ownerID,
+                userIDs: chat.userIDs,
                 lastMessageID: row.id,
                 lastMessageContent: row.content,
                 lastMessageCreatedAt: row.created_at,
@@ -207,6 +216,8 @@ const getFirstUnseenMessage = async (
         id: ChatModel['id'],
         title: ChatModel['title'],
         isGroup: ChatModel['isGroup'],
+        userIDs: UserModel['id'][],
+        ownerID: ChatModel['ownerID'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
@@ -216,6 +227,8 @@ const getFirstUnseenMessage = async (
     id: ChatModel['id'],
     title: ChatModel['title'],
     isGroup: ChatModel['isGroup'],
+    userIDs: UserModel['id'][],
+    ownerID: ChatModel['ownerID'],
     firstUnseenMessageID: MessageModel['id'] | null,
     isFirstUnseenFromThread: boolean,
     lastMessageID: MessageModel['id'],
@@ -227,6 +240,8 @@ const getFirstUnseenMessage = async (
         id: ChatModel['id'],
         title: ChatModel['title'],
         isGroup: ChatModel['isGroup'],
+        userIDs: UserModel['id'][],
+        ownerID: ChatModel['ownerID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
         lastMessageID: MessageModel['id'],

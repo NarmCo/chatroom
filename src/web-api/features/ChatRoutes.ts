@@ -8,6 +8,7 @@ import add from '../../features/Chat/actions/add';
 import edit from '../../features/Chat/actions/edit';
 import remove from '../../features/Chat/actions/remove';
 import get from '../../features/Chat/actions/get';
+import {Parser} from "@mrnafisia/type-query";
 
 const ChatRoute = '/chat';
 
@@ -26,7 +27,13 @@ const chat = (app: Express) => {
                 }
 
                 const userIDs: UserModel['id'][] = [];
-                const bodyUserIDs = req.body.userIDs;
+                const bodyUserIDs = Parser.json(req.body.userIDs);
+                if (!Array.isArray(bodyUserIDs)){
+                    return err({
+                        feature: FEATURES.Chat,
+                        code: 102
+                    });
+                }
                 for (const userID of bodyUserIDs) {
                     const parsed = UserModel.id.Parse(userID);
                     if (parsed === undefined) {

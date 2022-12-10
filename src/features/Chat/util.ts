@@ -13,7 +13,7 @@ const checkChatExistence = async (
             context.colsAnd({
                 id: ['=', id],
                 ownerID: ['=', userID],
-                isGroup: ['= false']
+                isGroup: ['= true']
             })
     ).exec(client, ['get', 'one']);
     if (!checkChatExistenceResult.ok) {

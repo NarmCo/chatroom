@@ -10,6 +10,7 @@ type Error =
     | [203] /* invalid isGroup */
     | [204] /* invalid id */
     | [205] /* cannot have multiple users in private chat */
+    | [206] /* owner can not be in userIDs */
     | [301] /* chat does not exist or you are not the owner */
     | [302] /* can not add or remove member from private chat or change its title */
     | [303] /* user already in group */

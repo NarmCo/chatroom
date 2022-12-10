@@ -4,12 +4,36 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "chatID": "21",
-  "content": "firstMessageInThread",
-  "threadID": 1
+  "chatID": 1,
+  "content": "replyToFirstChatMessage",
+  "messageID": 4
+}
+
+### EDIT
+PATCH {{baseUrl}}/message
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "id": 1,
+  "content": "editedFirstChatFirstThreadFirstMessage"
+}
+
+### REMOVE
+DELETE {{baseUrl}}/message
+Content-Type: application/json
+secret: {{rootSecret}}
+
+{
+  "id": 1
 }
 
 ### GET
 GET {{baseUrl}}/message?id=1&orderDirection=asc&step=5
+Content-Type: application/json
+secret: {{rootSecret}}
+
+### GET
+GET {{baseUrl}}/getAllMessages?threadID=1
 Content-Type: application/json
 secret: {{rootSecret}}

@@ -4,8 +4,8 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "title": "first thread",
-  "chatID": 21
+  "title": "second thread",
+  "chatID": 1
 }
 
 ### GET

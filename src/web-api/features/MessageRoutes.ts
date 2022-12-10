@@ -166,7 +166,7 @@ const message = (app: Express) => {
     app.put(
         MessageRoute,
         client_verify_log_histories_message(
-            MessageRoute + ':edit',
+            MessageRoute + ':seen',
             async (req, _res, connection) => {
                 let chatID: ChatModel['id'] | undefined = undefined;
                 if (req.body.chatID !== undefined) {
@@ -270,7 +270,7 @@ const message = (app: Express) => {
                 const step = req.query.step;
                 if (!isNumber(step)) {
                     return err({
-                        feature: FEATURES.Chat,
+                        feature: FEATURES.Message,
                         code: 108
                     });
                 }

@@ -1,11 +1,11 @@
-import { Connection } from '../../../utils/connection';
-import { UserModel } from '../../User/schema';
-import { Chat, ChatModel } from '../schema';
-import { err, ok, Result } from 'never-catch';
-import { HistoryRow } from '../../../utils/historyRow';
+import {Connection} from '../../../utils/connection';
+import {UserModel} from '../../User/schema';
+import {Chat, ChatModel} from '../schema';
+import {err, ok, Result} from 'never-catch';
+import {HistoryRow} from '../../../utils/historyRow';
 import Error from '../error';
-import { U } from '@mrnafisia/type-query';
-import { FEATURES } from '../../../utils/features';
+import {U} from '@mrnafisia/type-query';
+import {FEATURES} from '../../../utils/features';
 import Operation from '../operation';
 
 const add = async (
@@ -16,6 +16,7 @@ const add = async (
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     // validation
     const checkValidationResult = checkValidation(
+        connection.userID,
         title,
         userIDs,
         isGroup
@@ -56,6 +57,7 @@ const add = async (
 };
 
 const checkValidation = (
+    userID: ChatModel['ownerID'],
     title: ChatModel['title'],
     userIDs: UserModel['id'][],
     isGroup: ChatModel['isGroup']
@@ -76,8 +78,12 @@ const checkValidation = (
         return err([203]);
     }
 
-    if (isGroup && userIDs.length !== 1){
+    if (isGroup && userIDs.length !== 1) {
         return err([205]);
+    }
+
+    if (userIDs.includes(userID)) {
+        return err([206]);
     }
 
     return ok(undefined);
@@ -112,7 +118,7 @@ const checkChatExistence = async (
 };
 
 const addChat = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     chat: ChatModel<[
         'title',
         'userIDs',
