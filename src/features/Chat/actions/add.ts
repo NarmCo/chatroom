@@ -78,7 +78,7 @@ const checkValidation = (
         return err([203]);
     }
 
-    if (isGroup && userIDs.length !== 1) {
+    if (!isGroup && userIDs.length !== 1) {
         return err([205]);
     }
 
