@@ -195,7 +195,7 @@ const thread = (app: Express) => {
                     code: 7898,
                     histories: [],
                     data: {
-                        chats: actionResult.value.result,
+                        threads: actionResult.value.result,
                         length: actionResult.value.length
                     }
                 });
@@ -203,7 +203,6 @@ const thread = (app: Express) => {
         )
     );
 };
-
 
 const isNumber = (value: any): value is number => {
     return value as number !== undefined;

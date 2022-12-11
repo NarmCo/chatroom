@@ -4,11 +4,11 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "title": "second thread",
+  "title": "third thread",
   "chatID": 1
 }
 
 ### GET
-GET {{vpsUrl}}/thread?start=0&step=-1&chatID=1
+GET {{baseUrl}}/thread?start=0&step=-1&chatID=1
 Content-Type: application/json
-secret: eb06ded7555aaaf8
+secret: {{rootSecret}}

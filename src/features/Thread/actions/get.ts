@@ -15,6 +15,7 @@ const get = async (
     result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
+        ownerID: ThreadModel['threadOwnerID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
@@ -189,7 +190,7 @@ const getFirstUnseenMessage = async (
 ): Promise<Result<{
     id: ThreadModel['id'],
     title: ThreadModel['title'],
-    threadOwnerID: ThreadModel['threadOwnerID'],
+    ownerID: ThreadModel['threadOwnerID'],
     firstUnseenMessageID: MessageModel['id'] | null
     lastMessageID: MessageModel['id'] | null,
     lastMessageContent: MessageModel['content'] | null,
@@ -199,7 +200,7 @@ const getFirstUnseenMessage = async (
     const result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
-        threadOwnerID: ThreadModel['threadOwnerID'],
+        ownerID: ThreadModel['threadOwnerID'],
         firstUnseenMessageID: MessageModel['id'] | null
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
@@ -231,7 +232,8 @@ const getFirstUnseenMessage = async (
 
         result.push({
             ...threadWithLastMessageDetail,
-            firstUnseenMessageID
+            firstUnseenMessageID,
+            ownerID: threadWithLastMessageDetail.threadOwnerID
         });
     }
 
