@@ -35,6 +35,12 @@ const get = async (
     if (!getThreadsResult.ok) {
         return getThreadsResult;
     }
+    if(getThreadsResult.value.length === 0){
+        return ok({
+            result: [],
+            length: 0
+        })
+    }
 
     // find last message details
     const getLastMessagesResult = await getLastMessages(

@@ -37,6 +37,12 @@ const get = async (
     if (!getChatsResult.ok) {
         return getChatsResult;
     }
+    if (getChatsResult.value.length === 0){
+        return ok({
+            result: [],
+            length: 0
+        })
+    }
 
     // find last message details
     const getLastMessagesResult = await getLastMessages(
