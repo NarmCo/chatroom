@@ -52,7 +52,10 @@ const Thread = createEntity(ThreadTable);
 type ThreadModel<R extends readonly (keyof typeof ThreadTable['columns'])[] = [
     'id',
     'title',
-    'chatID'
+    'chatID',
+    'chatOwnerID',
+    'threadOwnerID',
+    'lastMessageSentAt'
 ], O extends readonly (keyof typeof ThreadTable['columns'])[] = []> = Model<typeof ThreadTable['columns'], R, O>;
 const ThreadModel = createModelUtils(Thread.table.columns);
 

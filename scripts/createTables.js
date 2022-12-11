@@ -8,7 +8,7 @@ import { Message } from '../src/features/Message/schema';
 import { File } from '../src/features/File/schema';
 import { createPool, createTables } from '@mrnafisia/type-query';
 
-const connectionUrl = 'postgres://mohammad:12345678@localhost:5432/chatroom';
+const connectionUrl = 'postgres://postgres:12345678@localhost:5432/chatroom';
 const pool = createPool(connectionUrl);
 
 (async () => {

@@ -1,6 +1,6 @@
 import Error from '../../Chat/error';
-import { err, ok, Result } from 'never-catch';
 import { ChatModel } from '../../Chat/schema';
+import { err, ok, Result } from 'never-catch';
 import { Thread, ThreadModel } from '../schema';
 import { MessageModel } from '../../Message/schema';
 import { Context, U } from '@mrnafisia/type-query';
@@ -64,14 +64,14 @@ const getThreads = async (
     chatID: ChatModel['id'],
     start: bigint,
     step: number
-): Promise<Result<{ result: ThreadModel<['id', 'title']>[]; length: number }, Error>> => {
+): Promise<Result<{ result: ThreadModel<['id', 'title', 'threadOwnerID']>[]; length: number }, Error>> => {
     const where = (context: Context<typeof Thread.table['columns']>) => context.colCmp('chatID', '=', chatID);
     const getThreadsResult = await Thread.select(
-        ['id', 'title'] as const,
+        ['id', 'title', 'threadOwnerID'] as const,
         where,
         {
             start,
-            step,
+            step: Number(step) === -1 ? undefined : step,
             orders: [
                 {
                     by: 'lastMessageSentAt',
@@ -111,10 +111,11 @@ const getThreads = async (
 
 const getLastMessages = async (
     { client }: Omit<Connection, 'userID'>,
-    threads: ThreadModel<['id', 'title']>[]
+    threads: ThreadModel<['id', 'title', 'threadOwnerID']>[]
 ): Promise<Result<{
     id: ThreadModel['id'],
     title: ThreadModel['title'],
+    threadOwnerID: ThreadModel['threadOwnerID'],
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
     lastMessageCreatedAt: MessageModel['createdAt'],
@@ -123,6 +124,7 @@ const getLastMessages = async (
     const result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
+        threadOwnerID: ThreadModel['threadOwnerID'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
@@ -154,6 +156,7 @@ const getLastMessages = async (
             {
                 id: thread.id,
                 title: thread.title,
+                threadOwnerID: thread.threadOwnerID,
                 lastMessageID: row.id,
                 lastMessageContent: row.content,
                 lastMessageCreatedAt: row.created_at,
@@ -170,6 +173,7 @@ const getFirstUnseenMessage = async (
     threadsWithLastMessageDetail: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
+        threadOwnerID: ThreadModel['threadOwnerID'],
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
         lastMessageCreatedAt: MessageModel['createdAt'],
@@ -178,6 +182,7 @@ const getFirstUnseenMessage = async (
 ): Promise<Result<{
     id: ThreadModel['id'],
     title: ThreadModel['title'],
+    threadOwnerID: ThreadModel['threadOwnerID'],
     firstUnseenMessageID: MessageModel['id'] | null
     lastMessageID: MessageModel['id'],
     lastMessageContent: MessageModel['content'],
@@ -187,6 +192,7 @@ const getFirstUnseenMessage = async (
     const result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
+        threadOwnerID: ThreadModel['threadOwnerID'],
         firstUnseenMessageID: MessageModel['id'] | null
         lastMessageID: MessageModel['id'],
         lastMessageContent: MessageModel['content'],
