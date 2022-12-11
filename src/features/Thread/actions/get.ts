@@ -1,10 +1,10 @@
 import Error from '../../Chat/error';
-import { ChatModel } from '../../Chat/schema';
-import { err, ok, Result } from 'never-catch';
-import { Thread, ThreadModel } from '../schema';
-import { MessageModel } from '../../Message/schema';
-import { Context, U } from '@mrnafisia/type-query';
-import { Connection } from '../../../utils/connection';
+import {ChatModel} from '../../Chat/schema';
+import {err, ok, Result} from 'never-catch';
+import {Thread, ThreadModel} from '../schema';
+import {MessageModel} from '../../Message/schema';
+import {Context, U} from '@mrnafisia/type-query';
+import {Connection} from '../../../utils/connection';
 
 const get = async (
     connection: Connection,
@@ -16,10 +16,10 @@ const get = async (
         id: ThreadModel['id'],
         title: ThreadModel['title'],
         firstUnseenMessageID: MessageModel['id'] | null,
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[],
     length: number
 }, Error>> => {
@@ -60,7 +60,7 @@ const get = async (
 };
 
 const getThreads = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     chatID: ChatModel['id'],
     start: bigint,
     step: number
@@ -110,25 +110,25 @@ const getThreads = async (
 };
 
 const getLastMessages = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     threads: ThreadModel<['id', 'title', 'threadOwnerID']>[]
 ): Promise<Result<{
     id: ThreadModel['id'],
     title: ThreadModel['title'],
     threadOwnerID: ThreadModel['threadOwnerID'],
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
+    lastMessageID: MessageModel['id'] | null,
+    lastMessageContent: MessageModel['content'] | null,
+    lastMessageCreatedAt: MessageModel['createdAt'] | null,
+    lastMessageUserID: MessageModel['userID'] | null
 }[], Error>> => {
     const result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
         threadOwnerID: ThreadModel['threadOwnerID'],
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
     const getLastMessages = await client.query(
         'SELECT m1.id, m1.thread, m1.content, m1.user, m1.created_at' +
@@ -147,9 +147,16 @@ const getLastMessages = async (
     }
 
     for (const thread of threads) {
+        let lastMessageID = null;
+        let lastMessageContent = null;
+        let lastMessageCreatedAt = null;
+        let lastMessageUserID = null;
         const row = getLastMessages.rows.find(e => BigInt(e.thread) === thread.id);
-        if (row === undefined) {
-            return err([401, null]);
+        if (row !== undefined) {
+            lastMessageID = row.id;
+            lastMessageContent = row.content;
+            lastMessageCreatedAt = row.created_at;
+            lastMessageUserID = row.user;
         }
 
         result.push(
@@ -157,10 +164,10 @@ const getLastMessages = async (
                 id: thread.id,
                 title: thread.title,
                 threadOwnerID: thread.threadOwnerID,
-                lastMessageID: row.id,
-                lastMessageContent: row.content,
-                lastMessageCreatedAt: row.created_at,
-                lastMessageUserID: row.user
+                lastMessageID,
+                lastMessageContent,
+                lastMessageCreatedAt,
+                lastMessageUserID
             }
         );
     }
@@ -169,35 +176,35 @@ const getLastMessages = async (
 };
 
 const getFirstUnseenMessage = async (
-    { client, userID }: Connection,
+    {client, userID}: Connection,
     threadsWithLastMessageDetail: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
         threadOwnerID: ThreadModel['threadOwnerID'],
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[]
 ): Promise<Result<{
     id: ThreadModel['id'],
     title: ThreadModel['title'],
     threadOwnerID: ThreadModel['threadOwnerID'],
     firstUnseenMessageID: MessageModel['id'] | null
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
+    lastMessageID: MessageModel['id'] | null,
+    lastMessageContent: MessageModel['content'] | null,
+    lastMessageCreatedAt: MessageModel['createdAt'] | null,
+    lastMessageUserID: MessageModel['userID'] | null
 }[], Error>> => {
     const result: {
         id: ThreadModel['id'],
         title: ThreadModel['title'],
         threadOwnerID: ThreadModel['threadOwnerID'],
         firstUnseenMessageID: MessageModel['id'] | null
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
 
     const getFirstUnseenMessageResult = await client.query(

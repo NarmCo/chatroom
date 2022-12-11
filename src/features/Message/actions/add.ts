@@ -1,14 +1,14 @@
-import { Message, MessageModel } from '../schema';
-import { Thread, ThreadModel } from '../../Thread/schema';
-import { File, FileModel } from '../../File/schema';
-import { err, ok, Result } from 'never-catch';
-import { HistoryRow } from '../../../utils/historyRow';
+import {Message, MessageModel} from '../schema';
+import {Thread, ThreadModel} from '../../Thread/schema';
+import {File, FileModel} from '../../File/schema';
+import {err, ok, Result} from 'never-catch';
+import {HistoryRow} from '../../../utils/historyRow';
 import Error from '../error';
-import { Connection } from '../../../utils/connection';
-import { Chat, ChatModel } from '../../Chat/schema';
-import { UserModel } from '../../User/schema';
-import { U } from '@mrnafisia/type-query';
-import { FEATURES } from '../../../utils/features';
+import {Connection} from '../../../utils/connection';
+import {Chat, ChatModel} from '../../Chat/schema';
+import {UserModel} from '../../User/schema';
+import {U} from '@mrnafisia/type-query';
+import {FEATURES} from '../../../utils/features';
 import Operation from '../operation';
 import Constant from '../constant';
 
@@ -133,6 +133,19 @@ const add = async (
     }
     histories.push(...addMessageResult.value.histories);
 
+    // edit thread last message sent at
+    if (threadID !== undefined) {
+        const editThreadLastMessageSentAtResult = await editThreadLastMessageSentAt(
+            connection,
+            threadID,
+            serverTime
+        );
+        if (!editThreadLastMessageSentAtResult.ok) {
+            return editThreadLastMessageSentAtResult;
+        }
+        histories.push(...editThreadLastMessageSentAtResult.value.histories);
+    }
+
     return ok({
         id: addMessageResult.value.id,
         histories
@@ -173,7 +186,7 @@ const checkValidation = (
 };
 
 const checkChatExistence = async (
-    { userID, client }: Connection,
+    {userID, client}: Connection,
     chatID: ChatModel['id']
 ): Promise<Result<UserModel['id'], Error>> => {
     const checkChatExistenceResult = await Chat.select(
@@ -197,7 +210,7 @@ const checkChatExistence = async (
 };
 
 const checkThreadExistence = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     chatID: ChatModel['id'],
     threadID: ThreadModel['id']
 ): Promise<Result<undefined, Error>> => {
@@ -218,7 +231,7 @@ const checkThreadExistence = async (
 };
 
 const checkMessageExistence = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     messageID: MessageModel['id'],
     chatID: MessageModel['chatID']
 ): Promise<Result<undefined, Error>> => {
@@ -242,7 +255,7 @@ const checkMessageExistence = async (
 // forwarded_from_chat, is_forwarded_from_chat_group, forwarded_from_user,
 // forwarded_from_thread
 const checkForwardingMessageExistence = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     id: MessageModel['id']
 ): Promise<Result<{
     forward: {
@@ -280,7 +293,7 @@ const checkForwardingMessageExistence = async (
 };
 
 const checkFileExistence = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     fileID: FileModel['id']
 ): Promise<Result<undefined, Error>> => {
     const checkFileExistenceResult = await File.select(
@@ -297,7 +310,7 @@ const checkFileExistence = async (
 };
 
 const addMessage = async (
-    { client }: Connection,
+    {client}: Connection,
     message: MessageModel<['content', 'threadID', 'chatID', 'messageID', 'createdAt',
         'userID', 'seenBy', 'forward', 'fileID', 'isEdited', 'isDeleted']>
 ): Promise<Result<{ id: MessageModel['id']; histories: HistoryRow[] }, Error>> => {
@@ -329,7 +342,7 @@ const addMessage = async (
 };
 
 const editChatLastMessageSentAt = async (
-    { client }: Omit<Connection, 'userID'>,
+    {client}: Omit<Connection, 'userID'>,
     chatID: ChatModel['id'],
     lastMessageSentAt: ChatModel['lastMessageSentAt']
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
@@ -361,5 +374,37 @@ const editChatLastMessageSentAt = async (
         ]
     });
 };
+
+const editThreadLastMessageSentAt = async (
+    {client}: Omit<Connection, 'userID'>,
+    threadID: ThreadModel['id'],
+    lastMessageSentAt: ThreadModel['lastMessageSentAt']
+): Promise<Result<{ id: ThreadModel['id']; histories: HistoryRow[] }, Error>> => {
+    const editThreadLastMessageSentAtResult = await Thread.update({
+            lastMessageSentAt
+        },
+        context => context.colCmp('id', '=', threadID),
+        ['id'] as const
+    ).exec(client, ['get', 'one']);
+    if (!editThreadLastMessageSentAtResult.ok) {
+        return err([401, editThreadLastMessageSentAtResult.error]);
+    }
+
+    return ok({
+        id: editThreadLastMessageSentAtResult.value.id,
+        histories: [
+            {
+                feature: FEATURES.Message,
+                table: Thread.table.title,
+                row: BigInt(editThreadLastMessageSentAtResult.value.id),
+                operations: [Operation.EDIT_THREAD_LAST_MESSAGE_SENT_AT],
+                data: {
+                    threadID,
+                    lastMessageSentAt
+                }
+            }
+        ]
+    })
+}
 
 export default add;

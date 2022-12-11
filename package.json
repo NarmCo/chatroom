@@ -8,8 +8,7 @@
   "scripts": {
     "dev": "node --max-old-space-size=4096 node_modules/webpack/bin/webpack.js --config dev.webpack.config.js",
     "prd": "node --max-old-space-size=4096 node_modules/webpack/bin/webpack.js --config prd.webpack.config.js",
-    "emit-js": "tsc",
-    "test": "jest"
+    "emit-js": "tsc"
   },
   "keywords": [],
   "repository": "https://github.com/Mohammad-Sharifi-Sadeghi/chatroom.git",

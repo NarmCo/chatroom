@@ -9,6 +9,6 @@ secret: {{rootSecret}}
 }
 
 ### GET
-GET {{baseUrl}}/thread?start=0&step=25&chatID=1
+GET {{vpsUrl}}/thread?start=0&step=-1&chatID=1
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: eb06ded7555aaaf8
