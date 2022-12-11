@@ -4,9 +4,9 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "title": "firstGroup",
-  "userIDs": "[1, 3]",
-  "isGroup": true
+  "title": "null",
+  "userIDs": "[3]",
+  "isGroup": false
 }
 
 ### GET

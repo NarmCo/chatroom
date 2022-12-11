@@ -47,7 +47,7 @@ const add = async (
     return await addChat(
         connection,
         {
-            title,
+            title: isGroup ? title : null,
             userIDs: userIDs.map(e => e.toString()),
             ownerID: connection.userID,
             isGroup,
