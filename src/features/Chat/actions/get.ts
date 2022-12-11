@@ -1,11 +1,11 @@
 import Error from '../error';
-import { QueryResult } from 'pg';
-import { Chat, ChatModel } from '../schema';
-import { err, ok, Result } from 'never-catch';
-import { Context, U } from '@mrnafisia/type-query';
-import { MessageModel } from '../../Message/schema';
-import { Connection } from '../../../utils/connection';
-import { User, UserModel } from '../../User/schema';
+import {QueryResult} from 'pg';
+import {Chat, ChatModel} from '../schema';
+import {err, ok, Result} from 'never-catch';
+import {Context, U} from '@mrnafisia/type-query';
+import {MessageModel} from '../../Message/schema';
+import {Connection} from '../../../utils/connection';
+import {User, UserModel} from '../../User/schema';
 
 const get = async (
     connection: Connection,
@@ -20,10 +20,10 @@ const get = async (
         ownerID: ChatModel['ownerID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[],
     length: number
 }, Error>> => {
@@ -63,10 +63,10 @@ const get = async (
 };
 
 const getChats = async (
-    { client, userID }: Connection,
+    {client, userID}: Connection,
     start: bigint,
     step: number
-): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[] & {userIDs: UserModel['id'][]}[]; length: number }, Error>> => {
+): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[] & { userIDs: UserModel['id'][] }[]; length: number }, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
         context.colsOr({
             ownerID: ['=', userID],
@@ -91,13 +91,13 @@ const getChats = async (
     }
 
     const chatsWithoutTitle = getChatsResult.value.filter(e => e.title === null);
-    if (chatsWithoutTitle.length !== 0){
+    if (chatsWithoutTitle.length !== 0) {
         const ids: UserModel['id'][] = [];
-        for (const chatWithoutTitle of chatsWithoutTitle){
-            if (!ids.includes(Number((chatWithoutTitle.userIDs as string[])[0]))){
+        for (const chatWithoutTitle of chatsWithoutTitle) {
+            if (!ids.includes(Number((chatWithoutTitle.userIDs as string[])[0]))) {
                 ids.push(Number((chatWithoutTitle.userIDs as string[])[0]));
             }
-            if (!ids.includes(chatWithoutTitle.ownerID)){
+            if (!ids.includes(chatWithoutTitle.ownerID)) {
                 ids.push(chatWithoutTitle.ownerID);
             }
         }
@@ -105,15 +105,16 @@ const getChats = async (
             ['id', 'name'] as const,
             context => context.colList('id', 'in', ids)
         ).exec(client, []);
-        if (!getUsersResult.ok){
+        if (!getUsersResult.ok) {
             return err([401, getUsersResult.error])
         }
-        for(let i = 0; i < getChatsResult.value.length; ++i){
+
+        for (let i = 0; i < getChatsResult.value.length; ++i) {
             getChatsResult.value[i].userIDs = (getChatsResult.value[i].userIDs as string[]).map(e => Number(e));
-            if (getChatsResult.value[i].title === null){
-                if(userID === getChatsResult.value[i].ownerID){
+            if (getChatsResult.value[i].title === null) {
+                if (userID === getChatsResult.value[i].ownerID) {
                     getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === Number((getChatsResult.value[i].userIDs as string[])[0]))?.name as string
-                }else{
+                } else {
                     getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === getChatsResult.value[i].ownerID)?.name as string
                 }
             }
@@ -140,24 +141,24 @@ const getChats = async (
 
 
     return ok({
-        result: getChatsResult.value as typeof getChatsResult.value & {userIDs: UserModel['id'][]}[],
+        result: getChatsResult.value as typeof getChatsResult.value & { userIDs: UserModel['id'][] }[],
         length: getLengthResult.value.len
     });
 };
 
 const getLastMessages = async (
-    { client }: Omit<Connection, 'userID'>,
-    chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs']>[] & {userIDs: UserModel['id'][]}[]
+    {client}: Omit<Connection, 'userID'>,
+    chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs']>[] & { userIDs: UserModel['id'][] }[]
 ): Promise<Result<{
     id: ChatModel['id'],
     title: ChatModel['title'],
     isGroup: ChatModel['isGroup'],
     userIDs: UserModel['id'][],
     ownerID: ChatModel['ownerID'],
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
+    lastMessageID: MessageModel['id'] | null,
+    lastMessageContent: MessageModel['content'] | null,
+    lastMessageCreatedAt: MessageModel['createdAt'] | null,
+    lastMessageUserID: MessageModel['userID'] | null
 }[], Error>> => {
     const result: {
         id: ChatModel['id'],
@@ -165,10 +166,10 @@ const getLastMessages = async (
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
     const getLastMessages = await client.query(
         'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at' +
@@ -187,9 +188,18 @@ const getLastMessages = async (
     }
 
     for (const chat of chats) {
+
+
+        let lastMessageID: MessageModel['id'] | null = null;
+        let lastMessageContent: MessageModel['content'] | null = null;
+        let lastMessageCreatedAt: MessageModel['createdAt'] | null = null;
+        let lastMessageUserID: MessageModel['userID'] | null = null;
         const row = getLastMessages.rows.find(e => BigInt(e.chat) === chat.id);
-        if (row === undefined) {
-            return err([401, null]);
+        if (row !== undefined) {
+            lastMessageID = row.id;
+            lastMessageContent = row.content;
+            lastMessageCreatedAt = row.created_at;
+            lastMessageUserID = row.user;
         }
 
         result.push(
@@ -199,10 +209,10 @@ const getLastMessages = async (
                 isGroup: chat.isGroup,
                 ownerID: chat.ownerID,
                 userIDs: chat.userIDs,
-                lastMessageID: row.id,
-                lastMessageContent: row.content,
-                lastMessageCreatedAt: row.created_at,
-                lastMessageUserID: row.user
+                lastMessageID,
+                lastMessageContent,
+                lastMessageCreatedAt,
+                lastMessageUserID
             }
         );
     }
@@ -211,17 +221,17 @@ const getLastMessages = async (
 };
 
 const getFirstUnseenMessage = async (
-    { client, userID }: Connection,
+    {client, userID}: Connection,
     chatsWithLastMessageDetail: {
         id: ChatModel['id'],
         title: ChatModel['title'],
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[]
 ): Promise<Result<{
     id: ChatModel['id'],
@@ -231,10 +241,10 @@ const getFirstUnseenMessage = async (
     ownerID: ChatModel['ownerID'],
     firstUnseenMessageID: MessageModel['id'] | null,
     isFirstUnseenFromThread: boolean,
-    lastMessageID: MessageModel['id'],
-    lastMessageContent: MessageModel['content'],
-    lastMessageCreatedAt: MessageModel['createdAt'],
-    lastMessageUserID: MessageModel['userID']
+    lastMessageID: MessageModel['id'] | null,
+    lastMessageContent: MessageModel['content'] | null,
+    lastMessageCreatedAt: MessageModel['createdAt'] | null,
+    lastMessageUserID: MessageModel['userID'] | null
 }[], Error>> => {
     const result: {
         id: ChatModel['id'],
@@ -244,10 +254,10 @@ const getFirstUnseenMessage = async (
         ownerID: ChatModel['ownerID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
-        lastMessageID: MessageModel['id'],
-        lastMessageContent: MessageModel['content'],
-        lastMessageCreatedAt: MessageModel['createdAt'],
-        lastMessageUserID: MessageModel['userID']
+        lastMessageID: MessageModel['id'] | null,
+        lastMessageContent: MessageModel['content'] | null,
+        lastMessageCreatedAt: MessageModel['createdAt'] | null,
+        lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
 
     const getFirstUnseenMessageResult = await client.query(
@@ -296,7 +306,7 @@ const getFirstUnseenMessage = async (
             .find(e => BigInt(e.chat) === chatWithLastMessageDetail.id);
         if (mainChatFirstUnseenMessage !== undefined) {
             firstUnseenMessageID = mainChatFirstUnseenMessage.id;
-        }else{
+        } else {
             const row = getFirstUnseenThreadMessageResult?.rows.find(e => BigInt(e.chat) === chatWithLastMessageDetail.id);
             if (row !== undefined) {
                 isFirstUnseenFromThread = true;

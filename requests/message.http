@@ -4,9 +4,8 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "chatID": 1,
-  "content": "replyToFirstChatMessage",
-  "messageID": 4
+  "chatID": 7,
+  "content": "firstMessageInGroup"
 }
 
 ### EDIT

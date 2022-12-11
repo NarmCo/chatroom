@@ -129,7 +129,10 @@ const addChat = async (
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     const addChatResult = await Chat.insert(
         [chat],
-        ['id'] as const
+        ['id'] as const,
+        {
+            nullableDefaultColumns: ['title']
+        }
     ).exec(client, ['get', 'one']);
     if (!addChatResult.ok) {
         return err([401, addChatResult.error]);
