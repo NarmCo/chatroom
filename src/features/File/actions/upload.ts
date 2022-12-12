@@ -6,6 +6,8 @@ import { UploadedFile } from 'express-fileupload';
 import { FEATURES } from '../../../utils/features';
 import { Connection } from '../../../utils/connection';
 import { HistoryRow } from '../../../utils/historyRow';
+import { getPath } from '../util';
+import { FileTypes } from '../constant';
 
 const upload = async (
     connection: Connection,
@@ -35,7 +37,7 @@ const upload = async (
 
     const { id, histories } = addFileResult.value;
     // move file
-    await file.mv(__dirname + '/' +'files' + '/' + fileType + '/' + id);
+    await file.mv(getPath(fileType) + id);
 
     return ok({
         id,
@@ -49,7 +51,7 @@ const checkValidation = (
     let fileType: FileModel['fileType'];
     if (['image/jpeg', 'image/png'].includes(mimeType)){
         fileType = 'image';
-    } else if (['doc', 'docx', 'pdf', 'xls', 'xlsx', 'txt'].includes(mimeType)){
+    } else if (FileTypes.includes(mimeType)){
         fileType = 'document'
     } else {
         return err([201])

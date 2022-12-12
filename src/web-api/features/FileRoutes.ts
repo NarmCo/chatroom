@@ -5,7 +5,6 @@ import { FEATURES } from '../../utils/features';
 import upload from '../../features/File/actions/upload';
 import { FileModel } from '../../features/File/schema';
 import download from '../../features/File/actions/download';
-import * as fs from 'fs';
 import { pool } from '../../db';
 import { TokenModel } from '../../features/Token/schema';
 import verify from '../../features/Token/actions/verify';
@@ -13,6 +12,8 @@ import addLog from '../../features/Log/actions/add';
 import addHistories from '../../features/History/actions/add';
 import logError from '../utils/logError';
 import { HistoryRow } from '../../utils/historyRow';
+import { getPath } from '../../features/File/util';
+import * as fs from 'fs';
 
 const FileRoute = '/file';
 
@@ -169,10 +170,10 @@ const file = (app: Express) => {
                 res.end();
             } else {
                 const { fileType, contentType, name, id } = response.value;
-                const file = __dirname + '/' + 'files' + '/' + fileType + '/' + id;
-                res.setHeader('Content-disposition', 'attachment; filename=' + name);
+                const file = getPath(fileType) + id;
+                res.setHeader('Content-disposition', 'inline; filename=' + name);
                 res.setHeader('Content-type', contentType);
-
+                // res.download(file, name);
                 const filestream = fs.createReadStream(file);
                 filestream.pipe(res);
             }

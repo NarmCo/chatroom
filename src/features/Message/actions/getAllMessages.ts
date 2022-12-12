@@ -1,11 +1,11 @@
-import {Connection} from '../../../utils/connection';
-import {Chat, ChatModel} from '../../Chat/schema';
-import {Thread, ThreadModel} from '../../Thread/schema';
-import {err, ok, Result} from 'never-catch';
-import {Message, MessageModel} from '../schema';
+import { Connection } from '../../../utils/connection';
+import { Chat, ChatModel } from '../../Chat/schema';
+import { Thread, ThreadModel } from '../../Thread/schema';
+import { err, ok, Result } from 'never-catch';
+import { Message, MessageModel } from '../schema';
 import Error from '../error';
 import Constant from '../constant';
-import {U} from '@mrnafisia/type-query';
+import { U } from '@mrnafisia/type-query';
 
 const getAllMessages = async (
     connection: Connection,
@@ -70,7 +70,7 @@ const checkValidation = (
 export default getAllMessages;
 
 const checkChatExistence = async (
-    {client}: Omit<Connection, 'userID'>,
+    { client }: Omit<Connection, 'userID'>,
     chatID: ChatModel['id']
 ): Promise<Result<undefined, Error>> => {
     const checkChatExistenceResult = await Chat.select(
@@ -87,7 +87,7 @@ const checkChatExistence = async (
 };
 
 const checkThreadExistence = async (
-    {client}: Omit<Connection, 'userID'>,
+    { client }: Omit<Connection, 'userID'>,
     threadID: ThreadModel['id']
 ): Promise<Result<undefined, Error>> => {
     const checkThreadExistenceResult = await Thread.select(
@@ -104,7 +104,7 @@ const checkThreadExistence = async (
 };
 
 const getMessages = async (
-    {client}: Omit<Connection, 'userID'>,
+    { client }: Omit<Connection, 'userID'>,
     chatID?: ChatModel['id'],
     threadID?: ThreadModel['id']
 ): Promise<Result<MessageModel<['id', 'content', 'messageID',
@@ -127,13 +127,24 @@ const getMessages = async (
     if (!getMessagesResult.ok) {
         return err([401, getMessagesResult.error]);
     }
+    const messages = getMessagesResult.value;
 
-    for (let i = 0; i < getMessagesResult.value.length; ++i) {
-        if (getMessagesResult.value[i].isDeleted === true) {
-            getMessagesResult.value[i].content = Constant.DELETED_MESSAGE_CONTENT;
+    for (let i = 0; i < messages.length; ++i) {
+        if (messages[i].isDeleted === true) {
+            messages[i].content = Constant.DELETED_MESSAGE_CONTENT;
         }
-        getMessagesResult.value[i].seenBy = (getMessagesResult.value[i].seenBy as string[]).map(e => Number(e));
+        messages[i].seenBy = (messages[i].seenBy as string[]).map(e => Number(e));
     }
 
-    return ok(getMessagesResult.value);
+    messages.sort((a, b) => {
+        if (a.createdAt > b.createdAt) {
+            return 1;
+        } else if (a.createdAt < b.createdAt) {
+            return -1;
+        } else {
+            return 0;
+        }
+    });
+
+    return ok(messages);
 };

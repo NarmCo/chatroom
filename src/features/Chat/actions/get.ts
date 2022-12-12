@@ -37,7 +37,7 @@ const get = async (
     if (!getChatsResult.ok) {
         return getChatsResult;
     }
-    if (getChatsResult.value.length === 0){
+    if (getChatsResult.value.length === 0) {
         return ok({
             result: [],
             length: 0
@@ -72,31 +72,27 @@ const getChats = async (
     {client, userID}: Connection,
     start: bigint,
     step: number
-): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[] & { userIDs: UserModel['id'][] }[]; length: number }, Error>> => {
+): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[]
+        & { userIDs: UserModel['id'][] }[]; length: number }, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
         context.colsOr({
             ownerID: ['=', userID],
             userIDs: ['?', userID.toString()]
         });
     const getChatsResult = await Chat.select(
-        ['id', 'title', 'isGroup', 'userIDs', 'ownerID'] as const,
+        ['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'lastMessageSentAt'] as const,
         where,
         {
             start,
-            step: Number(step) === -1 ? undefined : step,
-            orders: [
-                {
-                    by: 'lastMessageSentAt',
-                    direction: 'desc'
-                }
-            ]
+            step: Number(step) === -1 ? undefined : step
         }
     ).exec(client, []);
     if (!getChatsResult.ok) {
         return err([401, getChatsResult.error]);
     }
+    const chats = getChatsResult.value;
 
-    const chatsWithoutTitle = getChatsResult.value.filter(e => e.title === null);
+    const chatsWithoutTitle = chats.filter(e => e.title === null);
     if (chatsWithoutTitle.length !== 0) {
         const ids: UserModel['id'][] = [];
         for (const chatWithoutTitle of chatsWithoutTitle) {
@@ -114,14 +110,19 @@ const getChats = async (
         if (!getUsersResult.ok) {
             return err([401, getUsersResult.error])
         }
+        const users = getUsersResult.value;
 
-        for (let i = 0; i < getChatsResult.value.length; ++i) {
-            getChatsResult.value[i].userIDs = (getChatsResult.value[i].userIDs as string[]).map(e => Number(e));
-            if (getChatsResult.value[i].title === null) {
-                if (userID === getChatsResult.value[i].ownerID) {
-                    getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === Number((getChatsResult.value[i].userIDs as string[])[0]))?.name as string
+        for (let i = 0; i < chats.length; ++i) {
+            chats[i].userIDs = (chats[i].userIDs as string[]).map(e => Number(e));
+            if (chats[i].ownerID !== userID){
+                chats[i].userIDs = [chats[i].ownerID];
+                chats[i].ownerID = userID;
+            }
+            if (!chats[i].isGroup) {
+                if (userID === chats[i].ownerID) {
+                    chats[i].title = users.find(e => e.id === Number((chats[i].userIDs as string[])[0]))?.name as string
                 } else {
-                    getChatsResult.value[i].title = getUsersResult.value.find(e => e.id === getChatsResult.value[i].ownerID)?.name as string
+                    chats[i].title = users.find(e => e.id === chats[i].ownerID)?.name as string
                 }
             }
         }
@@ -145,9 +146,18 @@ const getChats = async (
         return err([401, getLengthResult.error]);
     }
 
+    chats.sort((a, b) => {
+        if (a.lastMessageSentAt > b.lastMessageSentAt) {
+            return -1;
+        } else if (a.lastMessageSentAt < b.lastMessageSentAt) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
 
     return ok({
-        result: getChatsResult.value as typeof getChatsResult.value & { userIDs: UserModel['id'][] }[],
+        result: chats as typeof chats & { userIDs: UserModel['id'][] }[],
         length: getLengthResult.value.len
     });
 };

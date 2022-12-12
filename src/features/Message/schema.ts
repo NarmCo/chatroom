@@ -17,7 +17,6 @@ const MessageTable = {
             type: 'character varying',
             default: false,
             nullable: false,
-            minLength: 1,
             maxLength: 5000
         },
         threadID: {
@@ -79,7 +78,7 @@ const MessageTable = {
         fileID: {
             type: 'bigint',
             default: false,
-            nullable: false,
+            nullable: true,
             title: 'file'
         },
         isEdited: {

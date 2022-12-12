@@ -6,6 +6,7 @@
 /node_modules
 /dist
 /build-dev
+/files
 /build-prd
 *.env
 /requests/http-client.env.json

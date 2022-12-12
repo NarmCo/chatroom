@@ -4,8 +4,8 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "chatID": 10,
-  "content": "hello"
+  "chatID": 11,
+  "content": "secondMessage"
 }
 
 ### EDIT
@@ -24,7 +24,7 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 {
-  "id": 1
+  "id": 38
 }
 
 ### GET
@@ -33,6 +33,6 @@ Content-Type: application/json
 secret: {{rootSecret}}
 
 ### GET
-GET {{baseUrl}}/getAllMessages?threadID=1
+GET {{baseUrl}}/getAllMessages?chatID=11
 Content-Type: application/json
 secret: {{rootSecret}}
