@@ -1,25 +1,25 @@
-import { Connection } from '../../../utils/connection';
-import { UserModel } from '../../User/schema';
+import Error from '../error';
+import Operation from '../operation';
+import { U } from '@mrnafisia/type-query';
 import { Chat, ChatModel } from '../schema';
 import { err, ok, Result } from 'never-catch';
-import { HistoryRow } from '../../../utils/historyRow';
-import Error from '../error';
-import { U } from '@mrnafisia/type-query';
+import { UserModel } from '../../User/schema';
 import { FEATURES } from '../../../utils/features';
-import Operation from '../operation';
+import { HistoryRow } from '../../../utils/historyRow';
+import { Connection } from '../../../utils/connection';
 
 const add = async (
     connection: Connection,
-    title: ChatModel['title'],
     userIDs: UserModel['id'][],
-    isGroup: ChatModel['isGroup']
+    isGroup: ChatModel['isGroup'],
+    title?: string
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     // validation
     const checkValidationResult = checkValidation(
         connection.userID,
-        title,
         userIDs,
-        isGroup
+        isGroup,
+        title
     );
     if (!checkValidationResult.ok) {
         return checkValidationResult;
@@ -47,7 +47,7 @@ const add = async (
     return await addChat(
         connection,
         {
-            title: isGroup ? title : null,
+            title: title !== undefined ? title : null,
             userIDs: userIDs.map(e => e.toString()),
             ownerID: connection.userID,
             isGroup,
@@ -58,11 +58,11 @@ const add = async (
 
 const checkValidation = (
     userID: ChatModel['ownerID'],
-    title: ChatModel['title'],
     userIDs: UserModel['id'][],
-    isGroup: ChatModel['isGroup']
+    isGroup: ChatModel['isGroup'],
+    title?: string
 ): Result<undefined, Error> => {
-    if (!ChatModel.title.Validate(title)) {
+    if (title !== undefined && !ChatModel.title.Validate(title)) {
         return err([201]);
     }
 
@@ -152,7 +152,8 @@ const addChat = async (
                     title: chat.title,
                     userIDs: chat.userIDs,
                     ownerID: chat.ownerID,
-                    isGroup: chat.isGroup
+                    isGroup: chat.isGroup,
+                    lastMessageSentAt: chat.lastMessageSentAt
                 }
             }
         ]

@@ -8,7 +8,7 @@ import add from '../../features/Chat/actions/add';
 import edit from '../../features/Chat/actions/edit';
 import remove from '../../features/Chat/actions/remove';
 import get from '../../features/Chat/actions/get';
-import {Parser} from "@mrnafisia/type-query";
+import { Parser } from '@mrnafisia/type-query';
 
 const ChatRoute = '/chat';
 
@@ -18,17 +18,20 @@ const chat = (app: Express) => {
         client_verify_log_histories_message(
             ChatRoute + ':add',
             async (req, _res, connection) => {
-                const title = ChatModel.title.Parse(req.body.title);
-                if (title === undefined) {
-                    return err({
-                        feature: FEATURES.Chat,
-                        code: 101
-                    });
+                let title: string | undefined = undefined;
+                if (req.body.title !== undefined) {
+                    title = req.body.title;
+                    if (!isString(title)) {
+                        return err({
+                            feature: FEATURES.Chat,
+                            code: 101
+                        });
+                    }
                 }
 
                 const userIDs: UserModel['id'][] = [];
                 const bodyUserIDs = Parser.json(req.body.userIDs);
-                if (!Array.isArray(bodyUserIDs)){
+                if (!Array.isArray(bodyUserIDs)) {
                     return err({
                         feature: FEATURES.Chat,
                         code: 102
@@ -56,9 +59,9 @@ const chat = (app: Express) => {
                 // action
                 const actionResult = await add(
                     connection,
-                    title,
                     userIDs,
-                    isGroup
+                    isGroup,
+                    title
                 );
                 if (!actionResult.ok) {
                     const [code, data] = actionResult.error;
@@ -106,7 +109,13 @@ const chat = (app: Express) => {
 
                 let addUserIDs: UserModel['id'][] | undefined = undefined;
                 if (req.body.addUserIDs !== undefined) {
-                    const bodyAddUserIDs = req.body.addUserIDs;
+                    const bodyAddUserIDs = Parser.json(req.body.addUserIDs);
+                    if (!Array.isArray(bodyAddUserIDs)) {
+                        return err({
+                            feature: FEATURES.Chat,
+                            code: 102
+                        });
+                    }
                     addUserIDs = [];
                     for (const bodyAddUserID of bodyAddUserIDs) {
                         const parsed = UserModel.id.Parse(bodyAddUserID);
@@ -122,7 +131,13 @@ const chat = (app: Express) => {
 
                 let removeUserIDs: UserModel['id'][] | undefined = undefined;
                 if (req.body.removeUserIDs !== undefined) {
-                    const bodyRemoveUserIDs = req.body.removeUserIDs;
+                    const bodyRemoveUserIDs = Parser.json(req.body.removeUserIDs);
+                    if (!Array.isArray(bodyRemoveUserIDs)) {
+                        return err({
+                            feature: FEATURES.Chat,
+                            code: 102
+                        });
+                    }
                     removeUserIDs = [];
                     for (const bodyRemoveUserID of bodyRemoveUserIDs) {
                         const parsed = UserModel.id.Parse(bodyRemoveUserID);
