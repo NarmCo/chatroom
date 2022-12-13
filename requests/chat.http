@@ -12,4 +12,4 @@ secret: {{rootSecret}}
 ### GET
 GET {{baseUrl}}/chat?start=0&step=5
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}

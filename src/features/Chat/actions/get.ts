@@ -92,15 +92,24 @@ const getChats = async (
     }
     const chats = getChatsResult.value;
 
-    const chatsWithoutTitle = chats.filter(e => e.title === null);
-    if (chatsWithoutTitle.length !== 0) {
+    for (let i = 0;i < chats.length;++i){
+        chats[i].userIDs = (chats[i].userIDs as string[]).map(e => Number(e));
+        if (chats[i].ownerID !== userID){
+            chats[i].userIDs = [chats[i].ownerID];
+            chats[i].ownerID = userID;
+        }
+    }
+
+
+    const privateChats = chats.filter(e => e.isGroup === false);
+    if (privateChats.length !== 0) {
         const ids: UserModel['id'][] = [];
-        for (const chatWithoutTitle of chatsWithoutTitle) {
-            if (!ids.includes(Number((chatWithoutTitle.userIDs as string[])[0]))) {
-                ids.push(Number((chatWithoutTitle.userIDs as string[])[0]));
+        for (const privateChat of privateChats) {
+            if (!ids.includes((privateChat.userIDs as number[])[0])) {
+                ids.push((privateChat.userIDs as number[])[0]);
             }
-            if (!ids.includes(chatWithoutTitle.ownerID)) {
-                ids.push(chatWithoutTitle.ownerID);
+            if (!ids.includes(privateChat.ownerID)) {
+                ids.push(privateChat.ownerID);
             }
         }
         const getUsersResult = await User.select(
@@ -113,14 +122,9 @@ const getChats = async (
         const users = getUsersResult.value;
 
         for (let i = 0; i < chats.length; ++i) {
-            chats[i].userIDs = (chats[i].userIDs as string[]).map(e => Number(e));
-            if (chats[i].ownerID !== userID){
-                chats[i].userIDs = [chats[i].ownerID];
-                chats[i].ownerID = userID;
-            }
             if (!chats[i].isGroup) {
                 if (userID === chats[i].ownerID) {
-                    chats[i].title = users.find(e => e.id === Number((chats[i].userIDs as string[])[0]))?.name as string
+                    chats[i].title = users.find(e => e.id === (chats[i].userIDs as number[])[0])?.name as string
                 } else {
                     chats[i].title = users.find(e => e.id === chats[i].ownerID)?.name as string
                 }
