@@ -1,11 +1,11 @@
 import Error from '../error';
-import {QueryResult} from 'pg';
-import {Chat, ChatModel} from '../schema';
-import {err, ok, Result} from 'never-catch';
-import {Context, U} from '@mrnafisia/type-query';
-import {MessageModel} from '../../Message/schema';
-import {Connection} from '../../../utils/connection';
-import {User, UserModel} from '../../User/schema';
+import { QueryResult } from 'pg';
+import { Chat, ChatModel } from '../schema';
+import { err, ok, Result } from 'never-catch';
+import { Context, U } from '@mrnafisia/type-query';
+import { MessageModel } from '../../Message/schema';
+import { Connection } from '../../../utils/connection';
+import { User, UserModel } from '../../User/schema';
 
 const get = async (
     connection: Connection,
@@ -41,7 +41,7 @@ const get = async (
         return ok({
             result: [],
             length: 0
-        })
+        });
     }
 
     // find last message details
@@ -69,11 +69,13 @@ const get = async (
 };
 
 const getChats = async (
-    {client, userID}: Connection,
+    { client, userID }: Connection,
     start: bigint,
     step: number
-): Promise<Result<{ result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[]
-        & { userIDs: UserModel['id'][] }[]; length: number }, Error>> => {
+): Promise<Result<{
+    result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[]
+        & { userIDs: UserModel['id'][] }[]; length: number
+}, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
         context.colsOr({
             ownerID: ['=', userID],
@@ -92,14 +94,9 @@ const getChats = async (
     }
     const chats = getChatsResult.value;
 
-    for (let i = 0;i < chats.length;++i){
+    for (let i = 0; i < chats.length; ++i) {
         chats[i].userIDs = (chats[i].userIDs as string[]).map(e => Number(e));
-        if (chats[i].ownerID !== userID){
-            chats[i].userIDs = [chats[i].ownerID];
-            chats[i].ownerID = userID;
-        }
     }
-
 
     const privateChats = chats.filter(e => e.isGroup === false);
     if (privateChats.length !== 0) {
@@ -117,16 +114,20 @@ const getChats = async (
             context => context.colList('id', 'in', ids)
         ).exec(client, []);
         if (!getUsersResult.ok) {
-            return err([401, getUsersResult.error])
+            return err([401, getUsersResult.error]);
         }
         const users = getUsersResult.value;
 
         for (let i = 0; i < chats.length; ++i) {
             if (!chats[i].isGroup) {
+                if (chats[i].ownerID !== userID) {
+                    chats[i].userIDs = [chats[i].ownerID];
+                    chats[i].ownerID = userID;
+                }
                 if (userID === chats[i].ownerID) {
-                    chats[i].title = users.find(e => e.id === (chats[i].userIDs as number[])[0])?.name as string
+                    chats[i].title = users.find(e => e.id === (chats[i].userIDs as number[])[0])?.name as string;
                 } else {
-                    chats[i].title = users.find(e => e.id === chats[i].ownerID)?.name as string
+                    chats[i].title = users.find(e => e.id === chats[i].ownerID)?.name as string;
                 }
             }
         }
@@ -167,7 +168,7 @@ const getChats = async (
 };
 
 const getLastMessages = async (
-    {client}: Omit<Connection, 'userID'>,
+    { client }: Omit<Connection, 'userID'>,
     chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs']>[] & { userIDs: UserModel['id'][] }[]
 ): Promise<Result<{
     id: ChatModel['id'],
@@ -241,7 +242,7 @@ const getLastMessages = async (
 };
 
 const getFirstUnseenMessage = async (
-    {client, userID}: Connection,
+    { client, userID }: Connection,
     chatsWithLastMessageDetail: {
         id: ChatModel['id'],
         title: ChatModel['title'],
