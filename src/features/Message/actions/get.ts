@@ -97,18 +97,21 @@ const getMessagesMiddle = async (
 ): Promise<Result<MessageModel<['id', 'content', 'messageID',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted']>[], Error>> => {
-    const selectColumns = 'SELECT id, content, messageID, createdAt, userID,' +
-        ' seenBy, forward, filedID, isEdited, isDeleted FROM message WHERE ' +
-        'chatID = ' + chatID + ' AND threadID = ' + threadID + ' AND id';
+
+    const selectColumns = 'SELECT id, content, message.message, created_at, message.user,' +
+        ' seen_by, forward, file, is_edited, is_deleted FROM general.message WHERE ' +
+        'chat = ' + chatID + ' AND thread ' + (threadID === null ? ' is null ' : ' = ' + threadID) + ' AND id ';
+
     const getMessagesResult = await client.query(
         '(' + selectColumns + ' >= ' + id + ' LIMIT ' + step + ')' +
         ' UNION ' +
-        '(' + selectColumns + '<' + id + 'LIMIT' + step + ')'
+        '(' + selectColumns + ' < ' + id + ' ORDER BY id desc LIMIT ' + step + ')'
     ).then((res) => res)
         .catch((error) => [401, error]);
     if (Array.isArray(getMessagesResult)) {
         return err([401, getMessagesResult[1]]);
     }
+
 
     const result: MessageModel<['id', 'content', 'messageID',
         'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
@@ -152,6 +155,13 @@ const getOrderedMessages = async (
             id: [orderDirection === 'asc' ? '>=' : '<=', id]
         }),
         {
+            orders: orderDirection === 'desc' ?
+                [
+                    {
+                        by: 'id',
+                        direction: 'desc'
+                    }
+                ] : undefined,
             step
         }
     ).exec(client, []);
