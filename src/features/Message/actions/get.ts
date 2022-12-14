@@ -98,8 +98,8 @@ const getMessagesMiddle = async (
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted']>[], Error>> => {
 
-    const selectColumns = 'SELECT id, content, message.message, created_at, message.user,' +
-        ' seen_by, forward, file, is_edited, is_deleted FROM general.message WHERE ' +
+    const selectColumns = 'SELECT id, content, message.message as messageID, created_at as createdAt, message.user as userID ,' +
+        ' seen_by as seenBy , forward, file as fileID, is_edited as isEdited, is_deleted as isDeleted FROM general.message WHERE ' +
         'chat = ' + chatID + ' AND thread ' + (threadID === null ? ' is null ' : ' = ' + threadID) + ' AND id ';
 
     const getMessagesResult = await client.query(
@@ -127,9 +127,9 @@ const getMessagesMiddle = async (
     }
     result.sort((a, b) => {
         if (a.id > b.id) {
-            return -1;
-        } else {
             return 1;
+        } else {
+            return -1;
         }
     });
     return ok(result);
