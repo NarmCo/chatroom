@@ -9,7 +9,7 @@ const get = async (
     id: MessageModel['id'],
     orderDirection: string,
     step: number
-): Promise<Result<MessageModel<['id', 'content', 'messageID',
+): Promise<Result<MessageModel<['id', 'content', 'reply',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted']>[], Error>> => {
     // validation
@@ -81,11 +81,11 @@ const getMessagesMiddle = async (
     chatID: MessageModel['id'],
     threadID: MessageModel['threadID'],
     step: number
-): Promise<Result<MessageModel<['id', 'content', 'messageID',
+): Promise<Result<MessageModel<['id', 'content', 'reply',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted', 'fileName', 'fileSize']>[], Error>> => {
 
-    const selectColumns = 'SELECT id, content, message.message as "messageID", created_at as "createdAt", message.user as "userID" ,' +
+    const selectColumns = 'SELECT id, content, reply as "reply", created_at as "createdAt", message.user as "userID" ,' +
         ' seen_by as "seenBy" , forward, file as "fileID", is_edited as "isEdited", is_deleted as "isDeleted", file_name as "fileName", file_size as "fileSize"' +
         ' FROM general.message WHERE ' +
         'chat = ' + chatID + ' AND thread ' + (threadID === null ? ' is null ' : ' = ' + threadID) + ' AND id ';
@@ -100,7 +100,7 @@ const getMessagesMiddle = async (
         return err([401, getMessagesResult[1]]);
     }
 
-    const result: MessageModel<['id', 'content', 'messageID',
+    const result: MessageModel<['id', 'content', 'reply',
         'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
         'isEdited', 'isDeleted', 'fileName', 'fileSize']>[] = [];
 
@@ -133,11 +133,11 @@ const getOrderedMessages = async (
     threadID: MessageModel['threadID'],
     orderDirection: string,
     step: number
-): Promise<Result<MessageModel<['id', 'content', 'messageID',
+): Promise<Result<MessageModel<['id', 'content', 'reply',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted', 'fileName', 'fileSize']>[], Error>> => {
     const getOrderedMessagesResult = await Message.select(
-        ['id', 'content', 'messageID',
+        ['id', 'content', 'reply',
             'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
             'isEdited', 'isDeleted', 'fileName', 'fileSize'] as const,
         context => context.colsAnd({
@@ -159,7 +159,7 @@ const getOrderedMessages = async (
     if (!getOrderedMessagesResult.ok) {
         return err([401, getOrderedMessagesResult.error]);
     }
-    const result: MessageModel<['id', 'content', 'messageID',
+    const result: MessageModel<['id', 'content', 'reply',
         'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
         'isEdited', 'isDeleted', 'fileName', 'fileSize']>[] = [];
     for (const orderedMessage of getOrderedMessagesResult.value) {

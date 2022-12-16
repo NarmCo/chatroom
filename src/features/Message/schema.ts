@@ -41,11 +41,10 @@ const MessageTable = {
                 onDelete: 'cascade'
             }
         },
-        messageID: {
-            type: 'bigint',
+        reply: {
+            type: 'jsonb',
             default: false,
-            nullable: true,
-            title: 'message'
+            nullable: true
         },
         createdAt: {
             type: 'timestamp with time zone',
@@ -113,7 +112,7 @@ type MessageModel<R extends readonly (keyof typeof MessageTable['columns'])[] = 
     'content',
     'threadID',
     'chatID',
-    'messageID',
+    'reply',
     'createdAt',
     'userID',
     'seenBy',

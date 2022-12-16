@@ -16,7 +16,7 @@ const add = async (
     chatID: MessageModel['chatID'],
     content?: MessageModel['content'],
     threadID?: ThreadModel['id'],
-    messageID?: MessageModel['id'],
+    replyID?: MessageModel['id'],
     forwardID?: MessageModel['id'],
     fileID?: FileModel['id']
 ): Promise<Result<{ id: MessageModel['id']; histories: HistoryRow[] }, Error>> => {
@@ -26,7 +26,7 @@ const add = async (
         chatID,
         content,
         threadID,
-        messageID,
+        replyID,
         forwardID,
         fileID
     );
@@ -55,17 +55,24 @@ const add = async (
         }
     }
 
+    let reply: {
+        messageID: MessageModel['id'],
+        messageContent: MessageModel['content'],
+        userID: MessageModel['userID']
+    } | null = null;
     // check message existence
-    if (messageID !== undefined) {
+    if (replyID !== undefined) {
         const checkMessageExistenceResult = await checkMessageExistence(
             connection,
-            messageID,
+            replyID,
             chatID
         );
         if (!checkMessageExistenceResult.ok) {
             return checkMessageExistenceResult;
         }
+        reply = checkMessageExistenceResult.value;
     }
+
     let fileName: MessageModel['fileName'] = null;
     let fileSize: MessageModel['fileSize'] = null;
     // check forwarding message existence
@@ -112,7 +119,7 @@ const add = async (
             content: content as string,
             chatID,
             threadID: threadID === undefined ? null : threadID,
-            messageID: messageID === undefined ? null : messageID,
+            reply,
             fileID: fileID === undefined ? null : fileID,
             userID: connection.userID,
             seenBy: [connection.userID.toString()],
@@ -176,10 +183,10 @@ const checkValidation = (
     if (threadID !== undefined && !MessageModel.threadID.Validate(threadID)) {
         return err([203]);
     }
-    if (messageID !== undefined && !MessageModel.messageID.Validate(messageID)) {
+    if (messageID !== undefined && !MessageModel.id.Validate(messageID)) {
         return err([204]);
     }
-    if (forwardID !== undefined && !MessageModel.messageID.Validate(forwardID)) {
+    if (forwardID !== undefined && !MessageModel.id.Validate(forwardID)) {
         return err([205]);
     }
     if (fileID !== undefined && !MessageModel.fileID.Validate(fileID)) {
@@ -241,9 +248,13 @@ const checkMessageExistence = async (
     { client }: Omit<Connection, 'userID'>,
     messageID: MessageModel['id'],
     chatID: MessageModel['chatID']
-): Promise<Result<undefined, Error>> => {
+): Promise<Result<{
+    messageID: MessageModel['id'],
+    messageContent: MessageModel['content'],
+    userID: MessageModel['userID']
+}, Error>> => {
     const checkMessageExistenceResult = await Message.select(
-        ['id'] as const,
+        ['id', 'content', 'userID'] as const,
         context =>
             context.colsAnd({
                 id: ['=', messageID],
@@ -256,7 +267,11 @@ const checkMessageExistence = async (
         );
     }
 
-    return ok(undefined);
+    return ok({
+        messageID: checkMessageExistenceResult.value.id,
+        messageContent: checkMessageExistenceResult.value.content,
+        userID: checkMessageExistenceResult.value.userID
+    });
 };
 
 // forwarded_from_chat, is_forwarded_from_chat_group, forwarded_from_user,
@@ -324,14 +339,14 @@ const checkFileExistence = async (
 
 const addMessage = async (
     { client }: Connection,
-    message: MessageModel<['content', 'threadID', 'chatID', 'messageID', 'createdAt',
+    message: MessageModel<['content', 'threadID', 'chatID', 'reply', 'createdAt',
         'userID', 'seenBy', 'forward', 'fileID', 'isEdited', 'isDeleted', 'fileName', 'fileSize']>
 ): Promise<Result<{ id: MessageModel['id']; histories: HistoryRow[] }, Error>> => {
     const addMessageResult = await Message.insert(
         [message],
         ['id'] as const,
         {
-            nullableDefaultColumns: ['threadID', 'messageID', 'forward', 'fileID', 'fileName', 'fileSize']
+            nullableDefaultColumns: ['threadID', 'reply', 'forward', 'fileID', 'fileName', 'fileSize']
         }
     ).exec(client, ['get', 'one']);
     if (!addMessageResult.ok) {

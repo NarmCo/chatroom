@@ -52,10 +52,10 @@ const message = (app: Express) => {
                     }
                 }
 
-                let messageID: MessageModel['id'] | undefined = undefined;
-                if (req.body.messageID !== undefined) {
-                    messageID = MessageModel.id.Parse(req.body.messageID);
-                    if (messageID === undefined) {
+                let reply: MessageModel['id'] | undefined = undefined;
+                if (req.body.reply !== undefined) {
+                    reply = MessageModel.id.Parse(req.body.reply);
+                    if (reply === undefined) {
                         return err({
                             feature: FEATURES.Message,
                             code: 104
@@ -92,7 +92,7 @@ const message = (app: Express) => {
                     chatID,
                     content,
                     threadID,
-                    messageID,
+                    reply,
                     forwardID,
                     fileID
                 );

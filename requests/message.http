@@ -4,8 +4,9 @@ Content-Type: application/json
 secret: {{localRootSecret}}
 
 {
-  "chatID": 1,
-  "forwardID": 11
+  "chatID": 2,
+  "content": "replyContent",
+  "reply": "14"
 }
 
 ### EDIT
@@ -28,7 +29,7 @@ secret: {{rootSecret}}
 }
 
 ### GET
-GET {{baseUrl}}/message?step=2&orderDirection=middle&id=6
+GET {{baseUrl}}/message?step=2&orderDirection=middle&id=15
 Content-Type: application/json
 secret: {{localRootSecret}}
 

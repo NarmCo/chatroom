@@ -11,7 +11,7 @@ const getAllMessages = async (
     connection: Connection,
     chatID?: ChatModel['id'],
     threadID?: ThreadModel['id']
-): Promise<Result<MessageModel<['id', 'content', 'messageID',
+): Promise<Result<MessageModel<['id', 'content', 'reply',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted']>[], Error>> => {
     // validation
@@ -107,11 +107,11 @@ const getMessages = async (
     { client }: Omit<Connection, 'userID'>,
     chatID?: ChatModel['id'],
     threadID?: ThreadModel['id']
-): Promise<Result<MessageModel<['id', 'content', 'messageID',
+): Promise<Result<MessageModel<['id', 'content', 'reply',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
     'isEdited', 'isDeleted']>[], Error>> => {
     const getMessagesResult = await Message.select(
-        ['id', 'content', 'messageID',
+        ['id', 'content', 'reply',
             'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
             'isEdited', 'isDeleted'] as const,
         context =>
