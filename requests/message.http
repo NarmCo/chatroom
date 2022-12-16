@@ -1,11 +1,11 @@
 ### ADD
 POST {{baseUrl}}/message
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}
 
 {
-  "chatID": 11,
-  "content": "secondMessage"
+  "chatID": 1,
+  "forwardID": 11
 }
 
 ### EDIT
@@ -28,9 +28,9 @@ secret: {{rootSecret}}
 }
 
 ### GET
-GET {{baseUrl}}/message?id=1&orderDirection=asc&step=5
+GET {{baseUrl}}/message?step=2&orderDirection=middle&id=6
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}
 
 ### GET
 GET {{baseUrl}}/getAllMessages?chatID=11

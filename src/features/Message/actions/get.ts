@@ -57,21 +57,11 @@ const get = async (
 const checkMessageExistence = async (
     { client }: Omit<Connection, 'userID'>,
     id: MessageModel['id']
-): Promise<Result<MessageModel, Error>> => {
+): Promise<Result<MessageModel<['chatID', 'threadID']>, Error>> => {
     const checkMessageExistenceResult = await Message.select(
         [
-            'id',
-            'content',
             'threadID',
-            'chatID',
-            'messageID',
-            'createdAt',
-            'userID',
-            'seenBy',
-            'forward',
-            'fileID',
-            'isEdited',
-            'isDeleted'
+            'chatID'
         ] as const,
         context =>
             context.colCmp('id', '=', id)
@@ -82,10 +72,7 @@ const checkMessageExistence = async (
         );
     }
 
-    return ok({
-        ...checkMessageExistenceResult.value,
-        content: checkMessageExistenceResult.value.isDeleted ? Constant.DELETED_MESSAGE_CONTENT : checkMessageExistenceResult.value.content
-    });
+    return ok(checkMessageExistenceResult.value);
 };
 
 const getMessagesMiddle = async (
@@ -96,10 +83,11 @@ const getMessagesMiddle = async (
     step: number
 ): Promise<Result<MessageModel<['id', 'content', 'messageID',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
-    'isEdited', 'isDeleted']>[], Error>> => {
+    'isEdited', 'isDeleted', 'fileName', 'fileSize']>[], Error>> => {
 
     const selectColumns = 'SELECT id, content, message.message as "messageID", created_at as "createdAt", message.user as "userID" ,' +
-        ' seen_by as "seenBy" , forward, file as "fileID", is_edited as "isEdited", is_deleted as "isDeleted" FROM general.message WHERE ' +
+        ' seen_by as "seenBy" , forward, file as "fileID", is_edited as "isEdited", is_deleted as "isDeleted", file_name as "fileName", file_size as "fileSize"' +
+        ' FROM general.message WHERE ' +
         'chat = ' + chatID + ' AND thread ' + (threadID === null ? ' is null ' : ' = ' + threadID) + ' AND id ';
 
     const getMessagesResult = await client.query(
@@ -112,19 +100,21 @@ const getMessagesMiddle = async (
         return err([401, getMessagesResult[1]]);
     }
 
-
     const result: MessageModel<['id', 'content', 'messageID',
         'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
-        'isEdited', 'isDeleted']>[] = [];
+        'isEdited', 'isDeleted', 'fileName', 'fileSize']>[] = [];
 
     for (const row of getMessagesResult.rows) {
         result.push(
             {
                 ...row,
+                id: Number(row.id),
+                seenBy: (row.seenBy as string[]).map(e => Number(e)),
                 content: row.isDelete ? Constant.DELETED_MESSAGE_CONTENT : row.content
             }
         );
     }
+
     result.sort((a, b) => {
         if (a.id > b.id) {
             return -1;
@@ -132,6 +122,7 @@ const getMessagesMiddle = async (
             return 1;
         }
     });
+
     return ok(result);
 };
 
@@ -144,11 +135,11 @@ const getOrderedMessages = async (
     step: number
 ): Promise<Result<MessageModel<['id', 'content', 'messageID',
     'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
-    'isEdited', 'isDeleted']>[], Error>> => {
+    'isEdited', 'isDeleted', 'fileName', 'fileSize']>[], Error>> => {
     const getOrderedMessagesResult = await Message.select(
         ['id', 'content', 'messageID',
             'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
-            'isEdited', 'isDeleted'] as const,
+            'isEdited', 'isDeleted', 'fileName', 'fileSize'] as const,
         context => context.colsAnd({
             chatID: ['=', chatID],
             threadID: threadID === null ? ['= null'] : ['=', threadID],
@@ -170,10 +161,11 @@ const getOrderedMessages = async (
     }
     const result: MessageModel<['id', 'content', 'messageID',
         'createdAt', 'userID', 'seenBy', 'forward', 'fileID',
-        'isEdited', 'isDeleted']>[] = [];
+        'isEdited', 'isDeleted', 'fileName', 'fileSize']>[] = [];
     for (const orderedMessage of getOrderedMessagesResult.value) {
         result.push({
             ...orderedMessage,
+            seenBy: (orderedMessage.seenBy as string[]).map(e => Number(e)),
             content: orderedMessage.isDeleted ? Constant.DELETED_MESSAGE_CONTENT : orderedMessage.content
         });
     }

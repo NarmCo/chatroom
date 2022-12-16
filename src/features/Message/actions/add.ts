@@ -66,7 +66,8 @@ const add = async (
             return checkMessageExistenceResult;
         }
     }
-
+    let fileName: MessageModel['fileName'] = null;
+    let fileSize: MessageModel['fileSize'] = null;
     // check forwarding message existence
     let forward: {
         forwarded_from_chat: ChatModel['id'],
@@ -84,6 +85,9 @@ const add = async (
         }
         forward = checkForwardingMessageExistenceResult.value.forward;
         content = checkForwardingMessageExistenceResult.value.content;
+        fileID = checkForwardingMessageExistenceResult.value.fileID;
+        fileName = checkForwardingMessageExistenceResult.value.fileName;
+        fileSize = checkForwardingMessageExistenceResult.value.fileSize;
     }
 
     // file existence
@@ -95,6 +99,8 @@ const add = async (
         if (!checkFileExistenceResult.ok) {
             return checkFileExistenceResult;
         }
+        fileName = checkFileExistenceResult.value.name;
+        fileSize = checkFileExistenceResult.value.size;
     }
 
     const serverTime = new Date();
@@ -113,7 +119,9 @@ const add = async (
             forward,
             createdAt: serverTime,
             isDeleted: false,
-            isEdited: false
+            isEdited: false,
+            fileName,
+            fileSize
         }
     );
     if (!addMessageResult.ok) {
@@ -263,14 +271,17 @@ const checkForwardingMessageExistence = async (
         forwarded_from_user: UserModel['id'],
         forwarded_from_thread: MessageModel['threadID']
     },
-    content: MessageModel['content']
+    content: MessageModel['content'],
+    fileID?: FileModel['id'],
+    fileName: MessageModel['fileName'],
+    fileSize: MessageModel['fileSize']
 }, Error>> => {
     const checkForwardingMessageExistenceResult = await Message.join(
         'message', 'full', Chat.table, 'chat',
         contexts =>
             contexts.message.colCmp('chatID', '=', contexts.chat.col('id'))
     ).select(
-        ['chat_id', 'chat_isGroup', 'message_userID', 'message_threadID', 'message_content'] as const,
+        ['chat_id', 'chat_isGroup', 'message_userID', 'message_threadID', 'message_content', 'message_fileID', 'message_fileName', 'message_fileSize'] as const,
         contexts =>
             contexts.message.colCmp('id', '=', id)
     ).exec(client, ['get', 'one']);
@@ -287,16 +298,19 @@ const checkForwardingMessageExistence = async (
             is_forwarded_from_chat_group: checkForwardingMessageExistenceResult.value.chat_isGroup,
             forwarded_from_user: checkForwardingMessageExistenceResult.value.message_userID
         },
-        content: checkForwardingMessageExistenceResult.value.message_content
+        content: checkForwardingMessageExistenceResult.value.message_content,
+        fileID: checkForwardingMessageExistenceResult.value.message_fileID === null ? undefined : checkForwardingMessageExistenceResult.value.message_fileID,
+        fileName: checkForwardingMessageExistenceResult.value.message_fileName,
+        fileSize: checkForwardingMessageExistenceResult.value.message_fileSize
     });
 };
 
 const checkFileExistence = async (
     { client }: Omit<Connection, 'userID'>,
-    fileID: FileModel['id']
-): Promise<Result<undefined, Error>> => {
+    fileID: FileModel['id'],
+): Promise<Result<FileModel<['name', 'size']>, Error>> => {
     const checkFileExistenceResult = await File.select(
-        ['id'] as const,
+        ['id', 'name', 'size'] as const,
         context => context.colCmp('id', '=', fileID)
     ).exec(client, ['get', 'one']);
     if (!checkFileExistenceResult.ok) {
@@ -305,19 +319,19 @@ const checkFileExistence = async (
         );
     }
 
-    return ok(undefined);
+    return ok(checkFileExistenceResult.value);
 };
 
 const addMessage = async (
     { client }: Connection,
     message: MessageModel<['content', 'threadID', 'chatID', 'messageID', 'createdAt',
-        'userID', 'seenBy', 'forward', 'fileID', 'isEdited', 'isDeleted']>
+        'userID', 'seenBy', 'forward', 'fileID', 'isEdited', 'isDeleted', 'fileName', 'fileSize']>
 ): Promise<Result<{ id: MessageModel['id']; histories: HistoryRow[] }, Error>> => {
     const addMessageResult = await Message.insert(
         [message],
         ['id'] as const,
         {
-            nullableDefaultColumns: ['threadID', 'messageID', 'forward', 'fileID']
+            nullableDefaultColumns: ['threadID', 'messageID', 'forward', 'fileID', 'fileName', 'fileSize']
         }
     ).exec(client, ['get', 'one']);
     if (!addMessageResult.ok) {

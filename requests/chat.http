@@ -1,12 +1,11 @@
 ### ADD
 POST {{baseUrl}}/chat
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}
 
 {
-  "title": "group",
   "userIDs": "[3]",
-  "isGroup": true
+  "isGroup": false
 }
 
 ### GET

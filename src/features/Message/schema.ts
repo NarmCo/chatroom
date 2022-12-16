@@ -81,6 +81,18 @@ const MessageTable = {
             nullable: true,
             title: 'file'
         },
+        fileName: {
+            type: 'character varying',
+            default: false,
+            nullable: true,
+            title: 'file_name'
+        },
+        fileSize: {
+            type: 'bigint',
+            default: false,
+            nullable: true,
+            title: 'file_size'
+        },
         isEdited: {
             type: 'boolean',
             default: false,
@@ -107,6 +119,8 @@ type MessageModel<R extends readonly (keyof typeof MessageTable['columns'])[] = 
     'seenBy',
     'forward',
     'fileID',
+    'fileName',
+    'fileSize',
     'isEdited',
     'isDeleted'
 ],
