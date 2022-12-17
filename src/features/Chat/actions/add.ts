@@ -109,7 +109,7 @@ const checkChatExistence = async (
                         userIDs: ['<@', [connection.userID.toString()]]
                     })
                 ),
-                context.colBool('isGroup', '= true')
+                context.colBool('isGroup', '= false')
             )
     ).exec(connection.client, []);
     if (!checkChatExistenceResult.ok) {
