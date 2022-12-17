@@ -98,15 +98,18 @@ const checkChatExistence = async (
     const checkChatExistenceResult = await Chat.select(
         ['id'] as const,
         context =>
-            U.orOp(
-                context.colsAnd({
-                    ownerID: ['=', connection.userID],
-                    userIDs: ['<@', [userID.toString()]]
-                }),
-                context.colsAnd({
-                    ownerID: ['=', userID],
-                    userIDs: ['<@', [connection.userID.toString()]]
-                })
+            U.andOp(
+                U.orOp(
+                    context.colsAnd({
+                        ownerID: ['=', connection.userID],
+                        userIDs: ['<@', [userID.toString()]]
+                    }),
+                    context.colsAnd({
+                        ownerID: ['=', userID],
+                        userIDs: ['<@', [connection.userID.toString()]]
+                    })
+                ),
+                context.colBool('isGroup', '= true')
             )
     ).exec(connection.client, []);
     if (!checkChatExistenceResult.ok) {

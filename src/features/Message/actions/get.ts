@@ -108,7 +108,7 @@ const getMessagesMiddle = async (
         result.push(
             {
                 ...row,
-                id: Number(row.id),
+                id: BigInt(row.id),
                 seenBy: (row.seenBy as string[]).map(e => Number(e)),
                 content: row.isDelete ? Constant.DELETED_MESSAGE_CONTENT : row.content
             }
