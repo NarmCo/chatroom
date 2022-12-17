@@ -20,12 +20,6 @@ const FileTable = {
             default: false,
             nullable: false
         },
-        fileType: {
-            type: 'character varying',
-            default: false,
-            nullable: false,
-            title: 'file_type'
-        },
         contentType: {
             type: 'character varying',
             default: false,
@@ -39,7 +33,6 @@ type FileModel<R extends readonly (keyof typeof FileTable['columns'])[] = [
     'id',
     'size',
     'name',
-    'fileType',
     'contentType'
 ], O extends readonly (keyof typeof FileTable['columns'])[] = []> = Model<typeof FileTable['columns'], R, O>;
 const FileModel = createModelUtils(File.table.columns);

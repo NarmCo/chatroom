@@ -169,8 +169,8 @@ const file = (app: Express) => {
                 res.send({ feature, code });
                 res.end();
             } else {
-                const { fileType, contentType, name, id } = response.value;
-                const file = getPath(fileType) + id;
+                const { contentType, name, id } = response.value;
+                const file = getPath() + id;
                 res.setHeader('Content-disposition', 'inline; filename=' + name);
                 res.setHeader('Content-type', contentType);
                 // res.download(file, name);

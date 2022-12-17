@@ -6,9 +6,9 @@ import Error from '../error';
 const download = async (
     connection: Connection,
     id: FileModel['id']
-): Promise<Result<FileModel<['size',
+): Promise<Result<FileModel<[
+    'size',
     'name',
-    'fileType',
     'contentType']>, Error>> => {
     if (!FileModel.id.Validate(id)) {
         return err([202]);
@@ -24,15 +24,13 @@ const download = async (
 const getFile = async (
     { client }: Omit<Connection, 'userID'>,
     id: FileModel['id']
-): Promise<Result<FileModel<['size',
+): Promise<Result<FileModel<[
+    'size',
     'name',
-    'fileType',
-    'contentType']>, Error>> => {
+    'contentType'
+]>, Error>> => {
     const getFileResult = await File.select(
-        ['size',
-            'name',
-            'fileType',
-            'contentType'] as const,
+        ['size', 'name', 'contentType'] as const,
         context => context.colCmp('id', '=', id)
     ).exec(client, ['get', 'one']);
     if (!getFileResult.ok) {
