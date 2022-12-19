@@ -3,6 +3,8 @@ import Constant from '../constant';
 import { err, ok, Result } from 'never-catch';
 import { Message, MessageModel } from '../schema';
 import { Connection } from '../../../utils/connection';
+import { Chat, ChatModel } from '../../Chat/schema';
+import { U } from '@mrnafisia/type-query';
 
 const get = async (
     connection: Connection,
@@ -32,6 +34,12 @@ const get = async (
         return checkMessageExistenceResult;
     }
     const message = checkMessageExistenceResult.value;
+
+    // permission
+    const hasPermissionResult = await hasPermission(connection, message.chatID);
+    if (!hasPermissionResult.ok){
+        return hasPermissionResult;
+    }
 
     // get messages
     if (orderDirection === 'middle') {
@@ -178,5 +186,29 @@ const getOrderedMessages = async (
     });
     return ok(result);
 };
+
+const hasPermission = async (
+    { client, userID }: Connection,
+    chatID: ChatModel['id']
+): Promise<Result<undefined, Error>> => {
+    const hasPermissionResult = await Chat.select(
+        ['id'] as const,
+        context =>
+            U.andOp(
+                context.colCmp('id', '=', chatID),
+                context.colsOr({
+                    ownerID: ['=', userID],
+                    userIDs: ['?', userID.toString()]
+                })
+            )
+    ).exec(client, ['get', 'one']);
+    if (!hasPermissionResult.ok){
+        return err(
+            hasPermissionResult.error === false ? [307] : [401, hasPermissionResult.error]
+        )
+    }
+
+    return ok(undefined);
+}
 
 export default get;

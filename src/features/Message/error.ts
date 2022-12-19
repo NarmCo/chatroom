@@ -24,6 +24,8 @@ type Error =
     | [303] /* message does not exist */
     | [304] /* forwarding message does not exist */
     | [305] /* file does not exist */
+    | [306] /* message is not editable or deletable */
+    | [307] /* user is not permitted to see this message */
     | [401, unknown];
 
 export default Error;

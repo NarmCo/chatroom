@@ -6,6 +6,7 @@ import { Context, U } from '@mrnafisia/type-query';
 import { MessageModel } from '../../Message/schema';
 import { Connection } from '../../../utils/connection';
 import { User, UserModel } from '../../User/schema';
+import Constant from '../../Message/constant';
 
 const get = async (
     connection: Connection,
@@ -193,7 +194,7 @@ const getLastMessages = async (
         lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
     const getLastMessages = await client.query(
-        'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at' +
+        'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at, m1.is_deleted' +
         ' FROM general.message as m1' +
         ' inner join' +
         ' (SELECT chat, max(created_at) as created_at FROM general.message ' +
@@ -209,8 +210,6 @@ const getLastMessages = async (
     }
 
     for (const chat of chats) {
-
-
         let lastMessageID: MessageModel['id'] | null = null;
         let lastMessageContent: MessageModel['content'] | null = null;
         let lastMessageCreatedAt: MessageModel['createdAt'] | null = null;
@@ -218,7 +217,7 @@ const getLastMessages = async (
         const row = getLastMessages.rows.find(e => BigInt(e.chat) === chat.id);
         if (row !== undefined) {
             lastMessageID = row.id;
-            lastMessageContent = row.content;
+            lastMessageContent = row.is_deleted ? Constant.DELETED_MESSAGE_CONTENT : row.content;
             lastMessageCreatedAt = row.created_at;
             lastMessageUserID = row.user;
         }

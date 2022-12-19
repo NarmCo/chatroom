@@ -9,6 +9,7 @@ type Error =
     | [203] /* invalid threadID */
     | [301] /* chat does not exist or user is not a member */
     | [302] /* chat does not exist or user is not the owner */
+    | [303] /* user is not permitted to see this thread */
     | [401, unknown];
 
 export default Error;

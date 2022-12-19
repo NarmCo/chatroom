@@ -44,7 +44,7 @@ const checkMessageExistence = async (
         'chat',
         contexts => contexts.message.colCmp('chatID', '=', contexts.chat.col('id'))
     ).select(
-        ['message_id'] as const,
+        ['message_id', 'message_createdAt'] as const,
         contexts =>
             U.andAllOp(
                 [
@@ -62,6 +62,13 @@ const checkMessageExistence = async (
             checkMessageExistenceResult.error === false ?
                 [303] : [401, checkMessageExistenceResult.error]
         );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const messageAgeInMinutes = Math.floor(((new Date() - checkMessageExistenceResult.value.message_createdAt)/1000)/60);
+    if (messageAgeInMinutes > 2){
+        return err([306])
     }
 
     return ok(undefined);

@@ -1,10 +1,11 @@
 import Error from '../../Chat/error';
-import {ChatModel} from '../../Chat/schema';
+import { Chat, ChatModel } from '../../Chat/schema';
 import {err, ok, Result} from 'never-catch';
 import {Thread, ThreadModel} from '../schema';
 import {MessageModel} from '../../Message/schema';
 import {Context, U} from '@mrnafisia/type-query';
 import {Connection} from '../../../utils/connection';
+import Constant from '../../Message/constant';
 
 const get = async (
     connection: Connection,
@@ -24,6 +25,15 @@ const get = async (
     }[],
     length: number
 }, Error>> => {
+
+    // permission
+    const hasPermissionResult = await hasPermission(
+        connection,
+        chatID
+    );
+    if (!hasPermissionResult.ok){
+        return hasPermissionResult;
+    }
 
     // find user chats using connection.userID
     const getThreadsResult = await getThreads(
@@ -138,7 +148,7 @@ const getLastMessages = async (
         lastMessageUserID: MessageModel['userID'] | null
     }[] = [];
     const getLastMessages = await client.query(
-        'SELECT m1.id, m1.thread, m1.content, m1.user, m1.created_at' +
+        'SELECT m1.id, m1.thread, m1.content, m1.user, m1.created_at, m1.is_deleted' +
         ' FROM general.message as m1' +
         ' inner join' +
         ' (SELECT thread, max(created_at) as created_at FROM general.message WHERE' +
@@ -161,7 +171,7 @@ const getLastMessages = async (
         const row = getLastMessages.rows.find(e => BigInt(e.thread) === thread.id);
         if (row !== undefined) {
             lastMessageID = row.id;
-            lastMessageContent = row.content;
+            lastMessageContent = row.is_deleted ? Constant.DELETED_MESSAGE_CONTENT : row.content;
             lastMessageCreatedAt = row.created_at;
             lastMessageUserID = row.user;
         }
@@ -245,5 +255,29 @@ const getFirstUnseenMessage = async (
 
     return ok(result);
 };
+
+const hasPermission = async (
+    { client, userID }: Connection,
+    chatID: ChatModel['id']
+): Promise<Result<undefined, Error>> => {
+    const hasPermissionResult = await Chat.select(
+        ['id'] as const,
+        context =>
+            U.andOp(
+                context.colCmp('id', '=', chatID),
+                context.colsOr({
+                    ownerID: ['=', userID],
+                    userIDs: ['?', userID.toString()]
+                })
+            )
+    ).exec(client, ['get', 'one']);
+    if (!hasPermissionResult.ok){
+        return err(
+            hasPermissionResult.error === false ? [303] : [401, hasPermissionResult.error]
+        )
+    }
+
+    return ok(undefined);
+}
 
 export default get;

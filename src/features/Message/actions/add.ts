@@ -296,7 +296,7 @@ const checkForwardingMessageExistence = async (
         contexts =>
             contexts.message.colCmp('chatID', '=', contexts.chat.col('id'))
     ).select(
-        ['chat_id', 'chat_isGroup', 'message_userID', 'message_threadID', 'message_content', 'message_fileID', 'message_fileName', 'message_fileSize'] as const,
+        ['chat_id', 'chat_isGroup', 'message_userID', 'message_threadID', 'message_content', 'message_createdAt', 'message_fileID', 'message_fileName', 'message_fileSize'] as const,
         contexts =>
             contexts.message.colCmp('id', '=', id)
     ).exec(client, ['get', 'one']);
@@ -311,7 +311,8 @@ const checkForwardingMessageExistence = async (
             forwarded_from_chat: checkForwardingMessageExistenceResult.value.chat_id,
             forwarded_from_thread: checkForwardingMessageExistenceResult.value.message_threadID,
             is_forwarded_from_chat_group: checkForwardingMessageExistenceResult.value.chat_isGroup,
-            forwarded_from_user: checkForwardingMessageExistenceResult.value.message_userID
+            forwarded_from_user: checkForwardingMessageExistenceResult.value.message_userID,
+            forwarded_created_at: checkForwardingMessageExistenceResult.value.message_createdAt,
         },
         content: checkForwardingMessageExistenceResult.value.message_content,
         fileID: checkForwardingMessageExistenceResult.value.message_fileID === null ? undefined : checkForwardingMessageExistenceResult.value.message_fileID,
