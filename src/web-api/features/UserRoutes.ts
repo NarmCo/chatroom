@@ -89,7 +89,7 @@ const user = (app: Express) => {
                         username: req.body.username,
                         password: req.body.password,
                         name: req.body.name,
-                        email: req.body.email,
+                        fileID: req.body.fileID,
                         phone: req.body.phone
                     },
                     ['id'] as const,
