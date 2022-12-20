@@ -75,12 +75,15 @@ const add = async (
 
     let fileName: MessageModel['fileName'] = null;
     let fileSize: MessageModel['fileSize'] = null;
+
     // check forwarding message existence
     let forward: {
+        forwarded_from_message: MessageModel['id'],
         forwarded_from_chat: ChatModel['id'],
         is_forwarded_from_chat_group: ChatModel['isGroup'],
         forwarded_from_user: UserModel['id'],
-        forwarded_from_thread: MessageModel['threadID']
+        forwarded_from_thread: MessageModel['threadID'],
+        forwarded_created_at: MessageModel['createdAt']
     } | null = null;
     if (forwardID !== undefined) {
         const checkForwardingMessageExistenceResult = await checkForwardingMessageExistence(
@@ -90,7 +93,10 @@ const add = async (
         if (!checkForwardingMessageExistenceResult.ok) {
             return checkForwardingMessageExistenceResult;
         }
-        forward = checkForwardingMessageExistenceResult.value.forward;
+        forward = {
+            ...checkForwardingMessageExistenceResult.value.forward,
+            forwarded_from_message: forwardID
+        };
         content = checkForwardingMessageExistenceResult.value.content;
         fileID = checkForwardingMessageExistenceResult.value.fileID;
         fileName = checkForwardingMessageExistenceResult.value.fileName;
@@ -284,7 +290,8 @@ const checkForwardingMessageExistence = async (
         forwarded_from_chat: ChatModel['id'],
         is_forwarded_from_chat_group: ChatModel['isGroup'],
         forwarded_from_user: UserModel['id'],
-        forwarded_from_thread: MessageModel['threadID']
+        forwarded_from_thread: MessageModel['threadID'],
+        forwarded_created_at: MessageModel['createdAt']
     },
     content: MessageModel['content'],
     fileID?: FileModel['id'],
