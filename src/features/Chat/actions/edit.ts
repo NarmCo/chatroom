@@ -1,26 +1,29 @@
-import { Connection } from '../../../utils/connection';
+import Error from '../error';
+import Operation from '../operation';
 import { Chat, ChatModel } from '../schema';
+import { FileModel } from '../../File/schema';
 import { UserModel } from '../../User/schema';
 import { err, ok, Result } from 'never-catch';
-import { HistoryRow } from '../../../utils/historyRow';
-import Error from '../error';
 import { FEATURES } from '../../../utils/features';
-import Operation from '../operation';
-import { checkChatExistence } from '../util';
+import { Connection } from '../../../utils/connection';
+import { HistoryRow } from '../../../utils/historyRow';
+import { checkChatExistence, checkFileExistence } from '../util';
 
 const edit = async (
     connection: Connection,
     id: ChatModel['id'],
     title?: ChatModel['title'] & string,
     addUserIDs?: UserModel['id'][],
-    removeUserIDs?: UserModel['id'][]
+    removeUserIDs?: UserModel['id'][],
+    fileID?: FileModel['id']
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     // validation
     const checkValidationResult = checkValidation(
         id,
         title,
         addUserIDs,
-        removeUserIDs
+        removeUserIDs,
+        fileID
     );
     if (!checkValidationResult.ok) {
         return checkValidationResult;
@@ -56,11 +59,22 @@ const edit = async (
         }
     }
 
+    if (fileID !== undefined) {
+        const checkFileExistenceResult = await checkFileExistence(
+            connection,
+            fileID
+        );
+        if (!checkFileExistenceResult.ok) {
+            return checkFileExistenceResult;
+        }
+    }
+
     return await editChat(
         connection,
         id,
         title,
-        userIDs
+        userIDs,
+        fileID
     );
 };
 
@@ -68,7 +82,8 @@ const checkValidation = (
     id: ChatModel['id'],
     title?: ChatModel['title'] & string,
     addUserIDs?: UserModel['id'][],
-    removeUserIDs?: UserModel['id'][]
+    removeUserIDs?: UserModel['id'][],
+    fileID?: FileModel['id']
 ): Result<undefined, Error> => {
     if (!ChatModel.id.Validate(id)) {
         return err([204]);
@@ -102,6 +117,10 @@ const checkValidation = (
         }
     }
 
+    if (fileID !== undefined && FileModel.id.Validate(fileID)) {
+        return err([208]);
+    }
+
     return ok(undefined);
 };
 
@@ -109,12 +128,14 @@ const editChat = async (
     { client }: Omit<Connection, 'userID'>,
     id: ChatModel['id'],
     title?: ChatModel['title'] & string,
-    userIDs?: string[]
+    userIDs?: string[],
+    fileID?: FileModel['id']
 ): Promise<Result<{ id: ChatModel['id']; histories: HistoryRow[] }, Error>> => {
     const editChatResult = await Chat.update(
         {
             title,
-            userIDs
+            userIDs,
+            fileID
         },
         context =>
             context.colCmp('id', '=', id),
@@ -136,11 +157,13 @@ const editChat = async (
                 row: BigInt(editChatResult.value.id),
                 operations: [
                     ...(title === undefined ? [] : [Operation.EDIT_TITLE]),
-                    ...(userIDs === undefined ? [] : [Operation.EDIT_USER_IDS])
+                    ...(userIDs === undefined ? [] : [Operation.EDIT_USER_IDS]),
+                    ...(fileID === undefined ? [] : [Operation.EDIT_FILE_ID])
                 ],
                 data: {
                     ...(title === undefined ? {} : { title }),
-                    ...(userIDs === undefined ? {} : { userIDs })
+                    ...(userIDs === undefined ? {} : { userIDs }),
+                    ...(fileID === undefined ? {} : { fileID })
                 }
             }
         ]

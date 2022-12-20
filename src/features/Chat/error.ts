@@ -11,10 +11,13 @@ type Error =
     | [204] /* invalid id */
     | [205] /* cannot have multiple users in private chat */
     | [206] /* owner can not be in userIDs */
+    | [207] /* private chat cannot have avatar */
+    | [208] /* invalid file id */
     | [301] /* chat does not exist or you are not the owner */
     | [302] /* can not add or remove member from private chat or change its title */
     | [303] /* user already in group */
     | [304] /* removing user is not member of this group */
+    | [305] /* file does not exist */
     | [401, unknown];
 
 export default Error;

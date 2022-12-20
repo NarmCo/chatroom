@@ -39,6 +39,12 @@ const ChatTable = {
             default: false,
             nullable: false,
             title: 'last_message_sent_at'
+        },
+        fileID: {
+            type: 'bigint',
+            default: false,
+            nullable: true,
+            title: 'file'
         }
     }
 } as const;
@@ -49,7 +55,8 @@ type ChatModel<R extends readonly (keyof typeof ChatTable['columns'])[] = [
     'userIDs',
     'ownerID',
     'isGroup',
-    'lastMessageSentAt'
+    'lastMessageSentAt',
+    'fileID'
 ],
     O extends readonly (keyof typeof ChatTable['columns'])[] = []> = Model<typeof ChatTable['columns'], R, O>;
 const ChatModel = createModelUtils(Chat.table.columns);

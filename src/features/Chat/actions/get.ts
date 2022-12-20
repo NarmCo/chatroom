@@ -19,6 +19,7 @@ const get = async (
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
+        fileID: ChatModel['fileID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
         lastMessageID: MessageModel['id'] | null,
@@ -74,7 +75,7 @@ const getChats = async (
     start: bigint,
     step: number
 ): Promise<Result<{
-    result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID']>[]
+    result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'fileID']>[]
         & { userIDs: UserModel['id'][] }[]; length: number
 }, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
@@ -83,7 +84,7 @@ const getChats = async (
             userIDs: ['?', userID.toString()]
         });
     const getChatsResult = await Chat.select(
-        ['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'lastMessageSentAt'] as const,
+        ['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'lastMessageSentAt', 'fileID'] as const,
         where,
         {
             start,
@@ -170,13 +171,14 @@ const getChats = async (
 
 const getLastMessages = async (
     { client }: Omit<Connection, 'userID'>,
-    chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs']>[] & { userIDs: UserModel['id'][] }[]
+    chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs', 'fileID']>[] & { userIDs: UserModel['id'][] }[]
 ): Promise<Result<{
     id: ChatModel['id'],
     title: ChatModel['title'],
     isGroup: ChatModel['isGroup'],
     userIDs: UserModel['id'][],
     ownerID: ChatModel['ownerID'],
+    fileID: ChatModel['fileID'],
     lastMessageID: MessageModel['id'] | null,
     lastMessageContent: MessageModel['content'] | null,
     lastMessageCreatedAt: MessageModel['createdAt'] | null,
@@ -188,6 +190,7 @@ const getLastMessages = async (
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
+        fileID: ChatModel['fileID'],
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
@@ -229,6 +232,7 @@ const getLastMessages = async (
                 isGroup: chat.isGroup,
                 ownerID: chat.ownerID,
                 userIDs: chat.userIDs,
+                fileID: chat.fileID,
                 lastMessageID,
                 lastMessageContent,
                 lastMessageCreatedAt,
@@ -248,6 +252,7 @@ const getFirstUnseenMessage = async (
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
+        fileID: ChatModel['fileID'],
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
@@ -259,6 +264,7 @@ const getFirstUnseenMessage = async (
     isGroup: ChatModel['isGroup'],
     userIDs: UserModel['id'][],
     ownerID: ChatModel['ownerID'],
+    fileID: ChatModel['fileID'],
     firstUnseenMessageID: MessageModel['id'] | null,
     isFirstUnseenFromThread: boolean,
     lastMessageID: MessageModel['id'] | null,
@@ -272,6 +278,7 @@ const getFirstUnseenMessage = async (
         isGroup: ChatModel['isGroup'],
         userIDs: UserModel['id'][],
         ownerID: ChatModel['ownerID'],
+        fileID: ChatModel['fileID'],
         firstUnseenMessageID: MessageModel['id'] | null,
         isFirstUnseenFromThread: boolean,
         lastMessageID: MessageModel['id'] | null,

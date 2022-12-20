@@ -12,9 +12,11 @@ import get from '../../features/Message/actions/get';
 import { ChatModel } from '../../features/Chat/schema';
 import getAllMessages from '../../features/Message/actions/getAllMessages';
 import seen from '../../features/Message/actions/seen';
+import searchMessage from '../../features/Message/actions/searchMessage';
 
 const MessageRoute = '/message';
 const getAllMessagesRoute = '/getAllMessages';
+const searchMessageRoute = '/searchMessage';
 
 const message = (app: Express) => {
     app.post(
@@ -257,7 +259,7 @@ const message = (app: Express) => {
     app.get(
         MessageRoute,
         client_verify_log_histories_message(
-            MessageRoute + 'get',
+            MessageRoute + ':get',
             async (req, _res, connection) => {
                 const id = MessageModel.id.Parse(req.query.id);
                 if (id === undefined) {
@@ -315,7 +317,7 @@ const message = (app: Express) => {
     app.get(
         getAllMessagesRoute,
         client_verify_log_histories_message(
-            getAllMessagesRoute + 'get',
+            getAllMessagesRoute + ':getAllMessages',
             async (req, _res, connection) => {
 
                 let chatID: ChatModel['id'] | undefined = undefined;
@@ -368,6 +370,88 @@ const message = (app: Express) => {
             }
         )
     );
+    app.get(
+        searchMessageRoute,
+        client_verify_log_histories_message(
+            searchMessageRoute + ':searchMessage',
+            async (req, _res, connection) => {
+                let chatID: ChatModel['id'] | undefined = undefined;
+                let threadID: ThreadModel['id'] | undefined = undefined;
+
+                const start = req.query.start;
+                if (!isBigInt(start)) {
+                    return err({
+                        feature: FEATURES.Message,
+                        code: 107
+                    });
+                }
+
+                const step = req.query.step;
+                if (!isNumber(step)) {
+                    return err({
+                        feature: FEATURES.Message,
+                        code: 108
+                    });
+                }
+
+                if (req.query.chatID !== undefined) {
+                    chatID = ChatModel.id.Parse(req.query.chatID);
+                    if (chatID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 101
+                        });
+                    }
+                }
+
+                if (req.query.threadID !== undefined) {
+                    threadID = ThreadModel.id.Parse(req.query.threadID);
+                    if (threadID === undefined) {
+                        return err({
+                            feature: FEATURES.Message,
+                            code: 103
+                        });
+                    }
+                }
+
+                const search = MessageModel.content.Parse(req.query.search);
+                if (search === undefined) {
+                    return err({
+                        feature: FEATURES.Message,
+                        code: 110
+                    });
+                }
+
+                // action
+                const actionResult = await searchMessage(
+                    connection,
+                    search,
+                    start,
+                    step,
+                    chatID,
+                    threadID
+                );
+                if (!actionResult.ok) {
+                    const [code, data] = actionResult.error;
+                    return err({
+                        feature: FEATURES.Message,
+                        code,
+                        data
+                    });
+                }
+
+                return ok({
+                    feature: FEATURES.Message,
+                    code: 7898,
+                    histories: [],
+                    data: {
+                        results: actionResult.value.results,
+                        length: actionResult.value.length
+                    }
+                });
+            }
+        )
+    );
 };
 
 
@@ -376,6 +460,9 @@ const isOrderDirection = (value: any): value is string => {
 };
 const isNumber = (value: any): value is number => {
     return value as number !== undefined;
+};
+const isBigInt = (value: any): value is bigint => {
+    return value as bigint !== undefined;
 };
 
 export default message;

@@ -8,6 +8,7 @@ type Error =
     | [107] /* can not parse start */
     | [108] /* can not parse step */
     | [109] /* can not parse orderDirection */
+    | [110] /* can not parse search */
     | [201] /* invalid content */
     | [202] /* invalid chatID */
     | [203] /* invalid threadID */
@@ -19,6 +20,8 @@ type Error =
     | [209] /* invalid order direction */
     | [210] /* invalid step */
     | [211] /* chatID and threadID can not be undefined */
+    | [212] /* invalid search */
+    | [213] /* can not search message in chat and thread at the sametime */
     | [301] /* chat does not exist or user is not a member */
     | [302] /* thread does not exist */
     | [303] /* message does not exist */

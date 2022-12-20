@@ -401,7 +401,7 @@ describe('add', () => {
             .setSystemTime(new Date('2020-01-01'));
         const chatData: ChatModel[] = [
             {
-                id: BigInt(1),
+                id: BigInt(2),
                 title: null,
                 userIDs: ['3'],
                 isGroup: false,
@@ -428,7 +428,7 @@ describe('add', () => {
                         },
                         {
                             row:{
-                                id: BigInt(2),
+                                id: BigInt(1),
                                 title: null,
                                 userIDs: testCase.userIDs.map(v => v.toString()),
                                 ownerID: testCase.senderUserID,
@@ -452,7 +452,25 @@ describe('add', () => {
                 if (!actionResult.ok){
                     fail('expect action to fail')
                 }
-                expect(actionResult.value).toStrictEqual(chatData[0].id)
+                expect(actionResult.value).toStrictEqual({
+                    id: BigInt(1),
+                    histories: [
+                        {
+                            feature: FEATURES.Chat,
+                            table: Chat.table.title,
+                            row: BigInt(1),
+                            operations: [Operation.ADD],
+                            data: {
+                                id: BigInt(1),
+                                isGroup: false,
+                                ownerID: testCase.senderUserID,
+                                title: null,
+                                userIDs: testCase.userIDs.map(e => e.toString()),
+                                lastMessageSentAt: new Date()
+                            }
+                        }
+                    ]
+                })
             },
             testPool
         )
