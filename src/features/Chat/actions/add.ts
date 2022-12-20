@@ -4,7 +4,7 @@ import { U } from '@mrnafisia/type-query';
 import { Chat, ChatModel } from '../schema';
 import { err, ok, Result } from 'never-catch';
 import { UserModel } from '../../User/schema';
-import Constant from '../../Message/constant';
+import Constant from '../constant';
 import { FEATURES } from '../../../utils/features';
 import { HistoryRow } from '../../../utils/historyRow';
 import { Connection } from '../../../utils/connection';

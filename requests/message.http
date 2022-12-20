@@ -29,11 +29,11 @@ secret: {{rootSecret}}
 }
 
 ### GET
-GET {{baseUrl}}/message?step=2&orderDirection=middle&id=15
+GET {{vpsUrl}}/message?step=10&orderDirection=desc&id=1292
 Content-Type: application/json
-secret: {{localRootSecret}}
+secret: {{vpsRootSecret}}
 
 ### GET
-GET {{baseUrl}}/getAllMessages?chatID=11
+GET {{vpsUrl}}/getAllMessages?chatID=39
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{vpsRootSecret}}
