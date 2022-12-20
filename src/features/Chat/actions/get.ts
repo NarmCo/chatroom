@@ -183,6 +183,7 @@ const getLastMessages = async (
     lastMessageContent: MessageModel['content'] | null,
     lastMessageCreatedAt: MessageModel['createdAt'] | null,
     lastMessageUserID: MessageModel['userID'] | null
+    lastMessageFileName: MessageModel['fileName']
 }[], Error>> => {
     const result: {
         id: ChatModel['id'],
@@ -195,9 +196,10 @@ const getLastMessages = async (
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
         lastMessageUserID: MessageModel['userID'] | null
+        lastMessageFileName: MessageModel['fileName']
     }[] = [];
     const getLastMessages = await client.query(
-        'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at, m1.is_deleted' +
+        'SELECT m1.id, m1.chat, m1.content, m1.user, m1.created_at, m1.is_deleted, m1.file_name' +
         ' FROM general.message as m1' +
         ' inner join' +
         ' (SELECT chat, max(created_at) as created_at FROM general.message ' +
@@ -217,12 +219,14 @@ const getLastMessages = async (
         let lastMessageContent: MessageModel['content'] | null = null;
         let lastMessageCreatedAt: MessageModel['createdAt'] | null = null;
         let lastMessageUserID: MessageModel['userID'] | null = null;
+        let lastMessageFileName: MessageModel['fileName'] = null;
         const row = getLastMessages.rows.find(e => BigInt(e.chat) === chat.id);
         if (row !== undefined) {
             lastMessageID = row.id;
             lastMessageContent = row.is_deleted ? Constant.DELETED_MESSAGE_CONTENT : row.content;
             lastMessageCreatedAt = row.created_at;
             lastMessageUserID = row.user;
+            lastMessageFileName = row.file_name;
         }
 
         result.push(
@@ -236,7 +240,8 @@ const getLastMessages = async (
                 lastMessageID,
                 lastMessageContent,
                 lastMessageCreatedAt,
-                lastMessageUserID
+                lastMessageUserID,
+                lastMessageFileName
             }
         );
     }
@@ -257,6 +262,7 @@ const getFirstUnseenMessage = async (
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
         lastMessageUserID: MessageModel['userID'] | null
+        lastMessageFileName: MessageModel['fileName']
     }[]
 ): Promise<Result<{
     id: ChatModel['id'],
@@ -271,6 +277,7 @@ const getFirstUnseenMessage = async (
     lastMessageContent: MessageModel['content'] | null,
     lastMessageCreatedAt: MessageModel['createdAt'] | null,
     lastMessageUserID: MessageModel['userID'] | null
+    lastMessageFileName: MessageModel['fileName']
 }[], Error>> => {
     const result: {
         id: ChatModel['id'],
@@ -285,6 +292,7 @@ const getFirstUnseenMessage = async (
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
         lastMessageUserID: MessageModel['userID'] | null
+        lastMessageFileName: MessageModel['fileName']
     }[] = [];
 
     const getFirstUnseenMessageResult = await client.query(
