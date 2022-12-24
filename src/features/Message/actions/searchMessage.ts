@@ -91,6 +91,19 @@ const searchMessage = async (
     const { messages, length } = getMessagesResult.value;
 
     if (chats !== undefined) {
+        const threadIDs = messages.filter(e => e.threadID !== null).map(e => e.threadID);
+        const threads: ThreadModel<['id', 'title']>[] = [];
+        if (threadIDs.length !== 0){
+            const getThreadsResult = await getThreads(
+                connection,
+                threadIDs as bigint[]
+            );
+            if (!getThreadsResult.ok){
+                return getThreadsResult;
+            }
+            threads.push(...getThreadsResult.value);
+        }
+
         for (let i = 0; i < messages.length; i++) {
             const messageChat = chats.find(e => e.id === messages[i].chatID);
             if (messageChat === undefined) {
@@ -108,6 +121,10 @@ const searchMessage = async (
                 messages[i].chatTitle = otherUser.name;
                 messages[i].chatIsGroup = messageChat.isGroup;
                 messages[i].chatFileID = otherUser.fileID;
+            }
+            if (messages[i].threadID !== null){
+                const thread = threads.find(e => e.id === messages[i].threadID);
+                messages[i].chatTitle += ` # ${thread?.title}`;
             }
         }
     }
@@ -327,5 +344,23 @@ const getUsers = async (
 
     return ok(getUsersResult.value);
 };
+
+const getThreads = async (
+    { client }: Omit<Connection, 'userID'>,
+    threadIDs: ThreadModel['id'][]
+): Promise<Result<ThreadModel<['id', 'title']>[], Error>> => {
+    const getThreadsResult = await Thread.select(
+        ['id', 'title'] as const,
+        context =>
+            context.colList('id', 'in', threadIDs)
+    ).exec(client, ['get', threadIDs.length]);
+    if (!getThreadsResult.ok){
+        return err(
+            getThreadsResult.error === false ? [302] : [401, getThreadsResult.error]
+        )
+    }
+
+    return ok(getThreadsResult.value);
+}
 
 export default searchMessage;
