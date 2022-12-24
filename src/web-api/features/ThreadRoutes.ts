@@ -3,7 +3,7 @@ import { err, ok } from 'never-catch';
 import { FEATURES } from '../../utils/features';
 import add from '../../features/Thread/actions/add';
 import edit from '../../features/Thread/actions/edit';
-import {  ThreadModel } from '../../features/Thread/schema';
+import { ThreadModel } from '../../features/Thread/schema';
 import client_verify_log_histories_message from '../middlewares/client_verify_log_histories_message';
 import remove from '../../features/Thread/actions/remove';
 import get from '../../features/Thread/actions/get';
@@ -174,12 +174,24 @@ const thread = (app: Express) => {
                     });
                 }
 
+                let threadID: ThreadModel['id'] | undefined = undefined;
+                if (req.query.threadID !== undefined){
+                    threadID = ThreadModel.id.Parse(req.query.threadID);
+                    if(threadID === undefined){
+                        return err({
+                            feature: FEATURES.Thread,
+                            code: 103
+                        })
+                    }
+                }
+
                 // action
                 const actionResult = await get(
                     connection,
                     chatID,
                     start,
-                    step
+                    step,
+                    threadID
                 );
                 if (!actionResult.ok) {
                     const [code, data] = actionResult.error;

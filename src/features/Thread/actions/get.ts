@@ -11,7 +11,8 @@ const get = async (
     connection: Connection,
     chatID: ChatModel['id'],
     start: bigint,
-    step: number
+    step: number,
+    threadID?: ThreadModel['id']
 ): Promise<Result<{
     result: {
         id: ThreadModel['id'],
@@ -40,7 +41,8 @@ const get = async (
         connection,
         chatID,
         start,
-        step
+        step,
+        threadID
     );
     if (!getThreadsResult.ok) {
         return getThreadsResult;
@@ -80,9 +82,13 @@ const getThreads = async (
     {client}: Omit<Connection, 'userID'>,
     chatID: ChatModel['id'],
     start: bigint,
-    step: number
+    step: number,
+    threadID?: ThreadModel['id']
 ): Promise<Result<{ result: ThreadModel<['id', 'title', 'threadOwnerID']>[]; length: number }, Error>> => {
-    const where = (context: Context<typeof Thread.table['columns']>) => context.colCmp('chatID', '=', chatID);
+    const where = (context: Context<typeof Thread.table['columns']>) => context.colsAnd({
+        chatID: ['=', chatID],
+        id: ['=', threadID]
+    });
     const getThreadsResult = await Thread.select(
         ['id', 'title', 'threadOwnerID'] as const,
         where,
@@ -94,7 +100,8 @@ const getThreads = async (
                     by: 'lastMessageSentAt',
                     direction: 'desc'
                 }
-            ]
+            ],
+            ignoreInWhere: true
         }
     ).exec(client, []);
     if (!getThreadsResult.ok) {
@@ -113,7 +120,10 @@ const getThreads = async (
                     as: 'len'
                 }
             ] as const,
-        where
+        where,
+        {
+            ignoreInWhere: true
+        }
     ).exec(client, ['get', 'one']);
     if (!getLengthResult.ok) {
         return err([401, getLengthResult.error]);

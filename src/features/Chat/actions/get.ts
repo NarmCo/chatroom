@@ -11,7 +11,8 @@ import Constant from '../../Message/constant';
 const get = async (
     connection: Connection,
     start: bigint,
-    step: number
+    step: number,
+    chatID?: ChatModel['id']
 ): Promise<Result<{
     result: {
         id: ChatModel['id'],
@@ -25,16 +26,21 @@ const get = async (
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
-        lastMessageUserID: MessageModel['userID'] | null
+        lastMessageUserID: MessageModel['userID'] | null,
+        lastMessageFileName: MessageModel['fileName']
     }[],
     length: number
 }, Error>> => {
+    if (chatID !== undefined && !ChatModel.id.Validate(chatID)){
+        return err([204])
+    }
 
     // find user chats using connection.userID
     const getChatsResult = await getChats(
         connection,
         start,
-        step
+        step,
+        chatID
     );
     if (!getChatsResult.ok) {
         return getChatsResult;
@@ -73,22 +79,27 @@ const get = async (
 const getChats = async (
     { client, userID }: Connection,
     start: bigint,
-    step: number
+    step: number,
+    chatID?: ChatModel['id']
 ): Promise<Result<{
     result: ChatModel<['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'fileID']>[]
         & { userIDs: UserModel['id'][] }[]; length: number
 }, Error>> => {
     const where = (context: Context<typeof Chat.table['columns']>) =>
-        context.colsOr({
-            ownerID: ['=', userID],
-            userIDs: ['?', userID.toString()]
-        });
+        U.andOp(
+            context.colCmp('id', '=', chatID),
+            context.colsOr({
+                ownerID: ['=', userID],
+                userIDs: ['?', userID.toString()]
+            })
+        );
     const getChatsResult = await Chat.select(
         ['id', 'title', 'isGroup', 'userIDs', 'ownerID', 'lastMessageSentAt', 'fileID'] as const,
         where,
         {
             start,
-            step: Number(step) === -1 ? undefined : step
+            step: Number(step) === -1 ? undefined : step,
+            ignoreInWhere: true
         }
     ).exec(client, []);
     if (!getChatsResult.ok) {
@@ -129,6 +140,7 @@ const getChats = async (
                 if (userID === chats[i].ownerID) {
                     chats[i].title = users.find(e => e.id === (chats[i].userIDs as number[])[0])?.name as string;
                 } else {
+                    // TODO useless if ?
                     chats[i].title = users.find(e => e.id === chats[i].ownerID)?.name as string;
                 }
             }
@@ -147,7 +159,10 @@ const getChats = async (
                     as: 'len'
                 }
             ] as const,
-        where
+        where,
+        {
+            ignoreInWhere: true
+        }
     ).exec(client, ['get', 'one']);
     if (!getLengthResult.ok) {
         return err([401, getLengthResult.error]);
@@ -182,7 +197,7 @@ const getLastMessages = async (
     lastMessageID: MessageModel['id'] | null,
     lastMessageContent: MessageModel['content'] | null,
     lastMessageCreatedAt: MessageModel['createdAt'] | null,
-    lastMessageUserID: MessageModel['userID'] | null
+    lastMessageUserID: MessageModel['userID'] | null,
     lastMessageFileName: MessageModel['fileName']
 }[], Error>> => {
     const result: {
@@ -195,7 +210,7 @@ const getLastMessages = async (
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
-        lastMessageUserID: MessageModel['userID'] | null
+        lastMessageUserID: MessageModel['userID'] | null,
         lastMessageFileName: MessageModel['fileName']
     }[] = [];
     const getLastMessages = await client.query(
@@ -261,7 +276,7 @@ const getFirstUnseenMessage = async (
         lastMessageID: MessageModel['id'] | null,
         lastMessageContent: MessageModel['content'] | null,
         lastMessageCreatedAt: MessageModel['createdAt'] | null,
-        lastMessageUserID: MessageModel['userID'] | null
+        lastMessageUserID: MessageModel['userID'] | null,
         lastMessageFileName: MessageModel['fileName']
     }[]
 ): Promise<Result<{
@@ -276,7 +291,7 @@ const getFirstUnseenMessage = async (
     lastMessageID: MessageModel['id'] | null,
     lastMessageContent: MessageModel['content'] | null,
     lastMessageCreatedAt: MessageModel['createdAt'] | null,
-    lastMessageUserID: MessageModel['userID'] | null
+    lastMessageUserID: MessageModel['userID'] | null,
     lastMessageFileName: MessageModel['fileName']
 }[], Error>> => {
     const result: {

@@ -1,14 +1,14 @@
 ### ADD
 POST {{baseUrl}}/thread
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}
 
 {
-  "title": "third thread",
-  "chatID": 1
+  "title": "second thread",
+  "chatID": 16
 }
 
 ### GET
-GET {{baseUrl}}/thread?start=0&step=-1&chatID=1
+GET {{baseUrl}}/thread?start=0&step=-1&chatID=16&threadID=5
 Content-Type: application/json
-secret: {{rootSecret}}
+secret: {{localRootSecret}}

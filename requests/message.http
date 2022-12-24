@@ -4,9 +4,8 @@ Content-Type: application/json
 secret: {{localRootSecret}}
 
 {
-  "chatID": 2,
-  "content": "replyContent",
-  "reply": "14"
+  "chatID": 18,
+  "content": "first message in third chat"
 }
 
 ### EDIT

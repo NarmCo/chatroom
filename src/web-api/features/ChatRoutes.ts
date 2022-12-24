@@ -238,11 +238,23 @@ const chat = (app: Express) => {
                     });
                 }
 
+                let chatID: ChatModel['id'] | undefined = undefined;
+                if (req.query.chatID !== undefined) {
+                    chatID = ChatModel.id.Parse(req.query.chatID);
+                    if (chatID === undefined) {
+                        return err({
+                            feature: FEATURES.Chat,
+                            code: 104
+                        });
+                    }
+                }
+
                 // action
                 const actionResult = await get(
                     connection,
                     start,
-                    step
+                    step,
+                    chatID
                 );
                 if (!actionResult.ok) {
                     const [code, data] = actionResult.error;

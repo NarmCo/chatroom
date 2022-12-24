@@ -4,11 +4,12 @@ Content-Type: application/json
 secret: {{localRootSecret}}
 
 {
-  "userIDs": "[2]",
-  "isGroup": false
+  "title": "first group",
+  "userIDs": "[3, 4]",
+  "isGroup": true
 }
 
 ### GET
-GET {{baseUrl}}/chat?start=0&step=5
+GET {{baseUrl}}/chat?start=0&step=5&chatID=16
 Content-Type: application/json
 secret: {{localRootSecret}}

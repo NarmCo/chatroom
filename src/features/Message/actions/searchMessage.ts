@@ -23,7 +23,6 @@ const searchMessage = async (
         userID: MessageModel['userID'],
         createdAt: MessageModel['createdAt'],
         fileName: MessageModel['fileName'],
-        seenBy: MessageModel['seenBy'],
         chatTitle: ChatModel['title'],
         chatIsGroup: ChatModel['isGroup'],
         chatFileID: ChatModel['fileID']
@@ -31,7 +30,7 @@ const searchMessage = async (
     length: number
 }, Error>> => {
     let chats: ChatModel<['id', 'title', 'isGroup', 'ownerID', 'userIDs', 'fileID']>[] | undefined = undefined;
-    let users: UserModel<['id', 'username', 'fileID']>[] | undefined = undefined;
+    let users: UserModel<['id', 'name', 'fileID']>[] | undefined = undefined;
     if (!MessageModel.content.Validate(search) && !MessageModel.fileName.Validate(search)) {
         return err([212]);
     }
@@ -102,23 +101,13 @@ const searchMessage = async (
                 messages[i].chatIsGroup = messageChat.isGroup;
                 messages[i].chatFileID = messageChat.fileID;
             } else {
-                if (messageChat.ownerID === connection.userID) {
-                    const otherUser = users?.find(e => e.id === Number((messageChat.userIDs as string[])[0]));
-                    if (otherUser === undefined) {
-                        return err([401, 'other user is unexpectedly null']);
-                    }
-                    messages[i].chatTitle = otherUser.username;
-                    messages[i].chatIsGroup = messageChat.isGroup;
-                    messages[i].chatFileID = otherUser.fileID;
-                } else {
-                    const otherUser = users?.find(e => e.id === messageChat.ownerID);
-                    if (otherUser === undefined) {
-                        return err([401, 'other user is unexpectedly null']);
-                    }
-                    messages[i].chatTitle = otherUser.username;
-                    messages[i].chatIsGroup = messageChat.isGroup;
-                    messages[i].chatFileID = otherUser.fileID;
+                const otherUser = users?.find(e => e.id === Number((messageChat.userIDs as string[])[0]));
+                if (otherUser === undefined) {
+                    return err([401, 'other user is unexpectedly null']);
                 }
+                messages[i].chatTitle = otherUser.name;
+                messages[i].chatIsGroup = messageChat.isGroup;
+                messages[i].chatFileID = otherUser.fileID;
             }
         }
     }
@@ -198,12 +187,15 @@ const getUserChats = async (
     if (!getUserChatsResult.ok) {
         return err([401, getUserChatsResult.error]);
     }
-
-    for (const chat of getUserChatsResult.value.filter(e => e.isGroup === false)) {
-        if (chat.ownerID === userID) {
-            userIDs.push(Number((chat.userIDs as string[])[0]));
+    const chats = getUserChatsResult.value;
+    const privateChats = chats.filter(e => e.isGroup === false);
+    for (let i = 0; i < privateChats.length; ++i) {
+        if (privateChats[i].ownerID === userID) {
+            userIDs.push(Number((privateChats[i].userIDs as string[])[0]));
         } else {
-            userIDs.push(chat.ownerID);
+            privateChats[i].userIDs = [privateChats[i].ownerID];
+            privateChats[i].ownerID = userID;
+            userIDs.push(privateChats[i].ownerID);
         }
     }
 
@@ -232,7 +224,6 @@ const getMessages = async (
         userID: MessageModel['userID'],
         createdAt: MessageModel['createdAt'],
         fileName: MessageModel['fileName'],
-        seenBy: MessageModel['seenBy'],
         chatTitle: ChatModel['title'],
         chatIsGroup: ChatModel['isGroup'],
         chatFileID: ChatModel['fileID']
@@ -247,7 +238,6 @@ const getMessages = async (
         userID: MessageModel['userID'],
         createdAt: MessageModel['createdAt'],
         fileName: MessageModel['fileName'],
-        seenBy: MessageModel['seenBy'],
         chatTitle: ChatModel['title'],
         chatIsGroup: ChatModel['isGroup'],
         chatFileID: ChatModel['fileID']
@@ -271,7 +261,7 @@ const getMessages = async (
             ]
         );
     const getMessagesResult = await Message.select(
-        ['id', 'chatID', 'threadID', 'content', 'userID', 'createdAt', 'fileName', 'seenBy'] as const,
+        ['id', 'chatID', 'threadID', 'content', 'userID', 'createdAt', 'fileName'] as const,
         where,
         {
             orders: [
@@ -326,9 +316,9 @@ const getMessages = async (
 const getUsers = async (
     { client }: Omit<Connection, 'userID'>,
     userIDs: UserModel['id'][]
-): Promise<Result<UserModel<['id', 'username', 'fileID']>[], Error>> => {
+): Promise<Result<UserModel<['id', 'name', 'fileID']>[], Error>> => {
     const getUsersResult = await User.select(
-        ['id', 'username', 'fileID'] as const,
+        ['id', 'name', 'fileID'] as const,
         context => context.colList('id', 'in', userIDs)
     ).exec(client, ['get', userIDs.length]);
     if (!getUsersResult.ok) {
