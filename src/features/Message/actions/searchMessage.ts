@@ -193,9 +193,9 @@ const getUserChats = async (
         if (privateChats[i].ownerID === userID) {
             userIDs.push(Number((privateChats[i].userIDs as string[])[0]));
         } else {
+            userIDs.push(privateChats[i].ownerID);
             privateChats[i].userIDs = [privateChats[i].ownerID];
             privateChats[i].ownerID = userID;
-            userIDs.push(privateChats[i].ownerID);
         }
     }
 
