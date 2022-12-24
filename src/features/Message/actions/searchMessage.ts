@@ -353,11 +353,9 @@ const getThreads = async (
         ['id', 'title'] as const,
         context =>
             context.colList('id', 'in', threadIDs)
-    ).exec(client, ['get', threadIDs.length]);
+    ).exec(client, []);
     if (!getThreadsResult.ok){
-        return err(
-            getThreadsResult.error === false ? [302] : [401, getThreadsResult.error]
-        )
+        return err([401, getThreadsResult.error])
     }
 
     return ok(getThreadsResult.value);
